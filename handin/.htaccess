@@ -1,0 +1,4 @@
+AuthType Basic
+AuthName "Restricted Area"
+AuthUserFile /home/drp925/public_html/portfolio/handin/.htpasswd
+require valid-user
