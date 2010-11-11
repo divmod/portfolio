@@ -73,7 +73,7 @@ my $dbpasswd="o3d7f737e";
 # THIS IS FOR ILLUSTRATION PURPOSES.  IN REALITY YOU WOULD ENCRYPT THE COOKIE
 # AND CONSIDER SUPPORTING ONLY HTTPS
 #
-my $cookiename="MicroblogSession";
+my $cookiename="PortfolioSession";
 
 #
 # Get the session input cookie, if any
@@ -96,6 +96,7 @@ my $logincomplain=0;
 my $action;
 if (param("act")) { 
   $action=param("act");
+ # print h2($action);
 } else {
   $action="login";
 }
@@ -189,7 +190,7 @@ if ($outputcookiecontent) {
 # Now we finally begin spitting back HTML
 #
 #
-print start_html('Microblog');
+print start_html('Portfolio');
 
 
 if ($loginok) { 
@@ -298,15 +299,57 @@ if ($action eq "display") {
     #
     # Generate the form
     # This is the part you will be extending
-    #
-    print start_form(-name=>'New Portfolio Name'),
+    #    
+    print h3('These are the portfolios you have');
+    #Query for portfolios and display the info
+    #To be done by Irene
     
-	"New Portfolio Name: ", textfield(-name=>'c',-default=>'myportfolio'),
-	submit,
-	end_form;
-    
-    print h2('There are the portfolios you have');
+    #Also give the option to create a new portfolio
+    print h3('<a href="portfolio.pl?act=create" target="output">Create New Portfolio</a>');
 }
+
+# CREATE
+# Allows a user to create a new portfolio
+if($action eq "create"){
+  print start_form(-name=>'Create'),
+	h2('Add Portfolio'),
+	"Portfolio Name:  ", textfield(-name=>'pname'),
+	p,
+	"Cash Amt:  ", textfield(-name=>'cashamt'),
+	p,
+	popup_menu(-name=>'strategy', -values=>['a', 'b', 'c'], -labels=>{'a' => 'buy n hold', 'b' => 'shannon rachet', 'c'=>'markov model'}, -default=>'a'), 
+	p,
+	hidden(-name=>'postrun',-default=>['1']),
+	hidden(-name=>'act',-default=>['create']), 
+	submit(-name=>'Submit'),
+	reset(),
+	end_form;
+  if (param('postrun')) { 
+      #my $by=$user;
+      my $pname=param('pname');
+      my $cashamt=param('cashamt');
+      my $strategy=param('strategy');
+      #print $strategy;
+      my $s;
+      if($strategy == 'a'){
+	$s = "buy n hold";
+      }
+      elsif($strategy == 'b'){
+	$s = "shannon rachet";
+      }
+      elsif($strategy == 'c'){
+	$s = "markov model";
+      }
+      my $error=AddPortfolio($user, $pname, $cashamt,$strategy);
+      if ($error) { 
+	print "Can't post message because: $error";
+      } else {
+	print "<h3>Portfolio $pname with $cashamt and $s strategy was successfully created by $user</h3>";
+      }
+  }
+	
+}
+
 
 # WRITE
 #
@@ -333,7 +376,7 @@ if ($action eq "write") {
 		   -rows=>16,
 		   -columns=>80),
           hidden(-name=>'postrun',-default=>['1']),
-	  hidden(-name=>'act',-default=>['write']), p
+	  hidden(-name=>'act',-default=>['write']), 
 	  submit,
 	  end_form,
 	  hr;
@@ -542,7 +585,17 @@ print end_html;
 # The remainder includes utilty and other functions
 #
 
+#############Portfolio functionality##########
+sub AddPortfolio {
+  my ($username,$pname, $cashamt, $strategy)=@_;
+  #INSERT INTO Portfolio(pid, username, name, cashamt, strategy) VALUES(pid.nextval,'root','myportfolio', 10000.00, 'b');
+  eval { ExecSQL($dbuser,$dbpasswd,"insert into Portfolio(pid, username, name, cashamt, strategy) ".
+		 "select pid.nextval, ?, ?, ?, ? from dual",
+		undef, $username, $pname, $cashamt, $strategy); };
+  return $@;
+}
 
+##############################################
 #
 # Generate a table of available permissions
 # ($table,$error) = PermTable()
@@ -605,6 +658,7 @@ sub UserPermTable {
 sub UserAdd { 
   eval { ExecSQL($dbuser,$dbpasswd,
 		 "insert into blog_users (name,password,email) values (?,?,?)",undef,@_);};
+  
   return $@;
 }
 
@@ -753,7 +807,7 @@ sub MessageQuery {
     my $msg;
     my $out="";
     my $out.="<h3>Messages from $timefrom to $timeto by '$by'<h3>";
-    if ($#msgs<0) { 
+    if ($msg<0) { 
       $out.="There are no messages";
     }
     foreach $msg (@msgs) { 
