@@ -549,6 +549,9 @@ if ($action eq "cashmgmt") {
 		if ($error2) {
 			print "Error in getting AvailableCashInPortfolio";
 		}
+		else {
+			print "<h2>Available Cash in Portfolio \"$portfolioname\": \$$availcash</h2>",p;
+		}
 
 #		print "Postrun! $portfolioname, $transactiontype, $amount, $pidno, $availcash",p;
 		if ($transactiontype eq 'Deposit') {
@@ -557,7 +560,7 @@ if ($action eq "cashmgmt") {
 			if ($error3) { 
 				print "Portfolio cash not properly debited: $error3";
 			}
-			print "Deposited $amount into Portfolio $portfolioname";
+			print "<h2>Deposited \$$amount into Portfolio \"$portfolioname\"</h2>";
 		}
 		elsif ($transactiontype eq 'Withdraw') {
 			if ($availcash < $amount) {
@@ -569,7 +572,7 @@ if ($action eq "cashmgmt") {
 				if ($error3) { 
 					print "Portfolio cash not properly debited: $error3";
 				}			
-				print "Withdrew $amount from Portfolio $portfolioname";
+				print "<h2>Withdrew \$$amount from Portfolio $portfolioname</h2>";
 			}
 		}
 	}
@@ -582,31 +585,8 @@ if ($action eq "cashmgmt") {
 #
 #
 
-if ($action eq "stockhistory") {
+# SEE HISTORICGRAPH.PL
 
-#double check param names
-	my $pid = param('pid');
-	my $fromdate = param('fromdate');
-	my $symbol = param('symbol');
-
-	print start_form(-name=>'StockHistory'),
-				h2('Get Historical Data for Stock \"$symbol\"'),
-#				"Portfolio Name:", scrolling_list(-name=>'portfolioname',-values=>[@portfolios],-size=>5),p,
-				"Time span: ", radio_group(-name=>'period', -values=>['Day','Week','Month','Quarter','Year'], -default=>'Day'),p,
-				"Amount: \$", textfield(-name=>'amount'),
-				p,
-				hidden(-name=>'postrun',-default=>['1']),
-				hidden(-name=>'act',-default=>['cashmgmt']),
-				submit,
-				end_form;
-
-	if (param('postrun')) {
-		my (@history, $historyerror) = GetHistory($symbol);
-		if($historyerror){
-			print "Can't get history: $historyerror";
-		}
-	}
-}
 #end Joy Code section#
 
 
@@ -870,6 +850,20 @@ if ($action eq "stockhistory") {
 				return ($col[0],$@);
 			}
 		}
+
+# Obtain the portfolio name based on the pid
+
+	sub PidToPortfolioName {
+		my $pid = @_;
+		my @col;
+		eval {@col=ExecSQL($dbuser,$dbpasswd,"select name from Portfolio where pid=?","COL",$pid);};
+		if ($@) {
+			return (undef,$@);
+		}
+		else {
+			return ($col[0],$@);
+		}
+	}
 
 #get the available cash in Portfolio based on pid
 		sub AvailableCashInPortfolio{
