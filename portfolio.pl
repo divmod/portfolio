@@ -56,7 +56,7 @@ use POSIX;
 $ENV{ORACLE_HOME}="/opt/oracle/product/11.2.0/db_1";
 $ENV{ORACLE_BASE}="/opt/oracle/product/11.2.0";
 $ENV{ORACLE_SID}="CS339";
-ACLE_HOME}="/opt/oracle/product/11.2.0/db_1";
+$ENV{ORACLE_HOME}="/opt/oracle/product/11.2.0/db_1";
 $ENV{ORACLE_BASE}="/opt/oracle/product/11.2.0";
 $ENV{ORACLE_SID}="CS339";
 
