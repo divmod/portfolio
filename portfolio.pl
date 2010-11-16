@@ -222,11 +222,11 @@ if ($action eq "login") {
   if ($logincomplain or !param('loginrun')) { 
     print start_form(-name=>'Login'),
       h2('Login to Portfolio Manager'),
-	"Name:",textfield(-name=>'user'),	p,
-	  "Password:",password_field(-name=>'password'),p,
+	"Name: ",textfield(-name=>'user'),	p,
+	  "Password :",password_field(-name=>'password'),p,
 	    hidden(-name=>'act',default=>['login']),
 	      hidden(-name=>'loginrun',default=>['1']),
-		submit,
+		submit(-name=>'login'),
 		  end_form;
   }
 }
@@ -308,13 +308,7 @@ if ($action eq "display") {
     
     #Also give the option to create a new portfolio
     print h3('<a href="portfolio.pl?act=create" target="output">Create New Portfolio</a>');
-    my ($count, $error) = MysqlTest();
-    if($error){
-	  print "Can't get count: $error";
-    }
-    else{
-	print "count= ".$count;
-    }
+ 
 }
 
 # CREATE
@@ -326,7 +320,7 @@ if($action eq "create"){
 	p,
 	"Cash Amt:  ", textfield(-name=>'cashamt'),
 	p,
-	popup_menu(-name=>'strategy', -values=>['a', 'b', 'c'], -labels=>{'a' => 'buy n hold', 'b' => 'shannon rachet', 'c'=>'markov model'}, -default=>'a'), 
+	popup_menu(-name=>'strategy', -values=>['a', 'b'], -labels=>{'a' => 'buy n hold', 'b' => 'shannon rachet'}, -default=>'a'), 
 	p,
 	hidden(-name=>'postrun',-default=>['1']),
 	hidden(-name=>'act',-default=>['create']), 
@@ -346,9 +340,7 @@ if($action eq "create"){
       elsif($strategy eq "b"){
 	$s = "shannon rachet";
       }
-      elsif($strategy eq "c"){
-	$s = "markov model";
-      }
+   
       #print "came here\n";
       my $error=AddPortfolio($user, $pname, $cashamt,$strategy);
       if ($error) { 
@@ -362,7 +354,7 @@ if($action eq "create"){
 	  print "Can't buy: $error";
 	}
 	else{
-	  print "<h3><a href=\"portfolio.pl?act=buy&pid=$pid\">Buy Stock</a></h3>";
+	  print "<h3><a href=\"portfolio.pl?act=buy&pid=$pid\">Buy Stock</a></h3> ";
 	}
       }
   }
@@ -376,11 +368,8 @@ if($action eq "buy"){
   #(Print) Cash Available : XXXX
   #Enter Investment Amount: 
   #Enter Date Purchased: [default is today]
-  my $pid = param('pid');
-  my ($iamt, $stock, $m, $d, $y, $pdate, $date);
- # my $page = param('page');
-  #if($page == 1){
-      #print "Page = 1";
+      my $pid = param('pid');
+      my ($iamt, $stock, $m, $d, $y, $pdate, $date);
       my ($cashamt, $error1) = AvailableCashInPortfolio($pid);
       if($error1){
 	print "Can't get available amt:$error1";
@@ -464,9 +453,9 @@ if($action eq "confirmBuy"){
       h2('Successful Purchase Summary'),
       "Date of Purchase: ".localtime($date),
       p,
-      "Stock Chosen:".$stock,
+      "Stock Chosen: \$".$stock,
       p,
-      "Investment Amount: ".$iamt,
+      "Investment Amount: \$".$iamt,
       p,
       "Quantity Purchased: ".$quantity,
       p,      
@@ -495,7 +484,139 @@ if($action eq "confirmBuy"){
      if ($error3) { 
       print "Portfolio cash not properly debited: $error3";
     }
-}
+     
+    #Remove this when things are integrated
+    print "<h3><a href=\"portfolio.pl?act=sell&pid=$pid&stock=$stock&bdate=$date\">Sell</a></h3>";
+}#end confirmBuy
+
+if($action eq "sell"){
+  #Quantity: XX
+  #Enter Date Sold:
+  #Enter Quantity to be sold: 
+
+    my $pid = param('pid');
+    my $stock = param('stock');
+    my $bdate = param('bdate');
+    my ($m, $d, $y, $sdate, $qsell);
+    my (@data, $error1) = GetAHolding($pid, $bdate, $stock);
+    if($error1){
+        print "Problem getting holding info:$error1";
+    }
+    my $quant = $data[0];
+    my $iinvest = $data[1];
+    #print "stock:".$stock."bdate: ".$bdate."quant: ".$quant." iinvest:".$iinvest; 
+    print start_form(-name=>'Sell'),
+	h2('Sell Stock'),
+	p,
+	"Enter Date Sold:  ", textfield(-name=>'month',-size=>2), "/",textfield(-name=>'day',-size=>2),"/",textfield(-name=>'year',-size=>4),"(mm/dd/yyyy)",
+	p,
+	"Enter Quantity to be Sold: ", textfield(-name=>'qsell',-size=>3),
+	p
+	hidden(-name=>'postrun',-default=>['1']),
+	hidden(-name=>'pid',-default=>[$pid]),
+	hidden(-name=>'bdate',-default=>[$bdate]),
+	hidden(-name=>'stock',-default=>[$stock]),
+	hidden(-name=>'act',-default=>['sell']),
+	p,
+	submit(-name=>'sell'), reset(),
+	end_form;
+	
+    if(param('postrun')){
+      $qsell = param('qsell');
+      $m = param('month');
+      $d = param('day');
+      $y = param('year');
+      $d = $m."/".$d."/".$y." 05:00:00 GMT";
+      $sdate =  parsedate($d);
+      #print $sdate;
+      my($exists, $error2) = StockExistsOnDate($sdate, $stock);
+      if(!$exists){
+	print h2('This stock does not exist for the date entered. Try Again!'); 
+      }
+      elsif($sdate < $bdate){
+	print h2('Cannot sell on date which is prior to purchase date to the stock. Try Again!');
+      }
+      elsif($quant - $qsell < 0){
+	print h2('Cannot sell more than what you own. Try Again!');
+      }
+      else{
+	my $diff = $quant - $qsell;
+	print "You want to sell ".$qsell." units of ". $stock. " stock on ".localtime($sdate);
+	print "<h3><a href=\"portfolio.pl?act=sellConfirm&pid=$pid&stock=$stock&bdate=$bdate&sdate=$sdate&qsell=$qsell&diff=$diff\">Confirm</a></h3>";
+	#Note put a cancel link that goes back to the portfolio.
+      }   
+    }#end postrun
+}#end action sell
+
+if($action eq "sellConfirm"){
+	  
+    my $pid = param('pid');
+    my $stock = param('stock');
+    my $bdate = param('bdate');
+    my $sdate = param('sdate');
+    my $qsell = param('qsell');
+    my $diff = param('diff');
+    my ($profitOrLoss, $cashback, $investUpdate, $cash);
+    
+    #########Update portfolio Cash
+    #get closingPrice on sell date
+    my ($closePriceS, $error1) = GetClosingPrice($sdate, $stock);
+    if($error1){
+      print "Problem getting close sell price:$error1";
+    } 
+    $cashback = $qsell * $closePriceS;
+    my ($cash, $error2) = AvailableCashInPortfolio($pid);
+    if($error2){
+      print "Problem getting current cash of portfolio: $error2";
+    }
+    
+    $cash += $cashback;
+    my($error3) = ManageCash($pid, $cash);
+    if($error3){
+      print "Problem updating cash in portfolio:$error3";
+    }
+    
+    ###calculate profit or loss
+    my ($closePriceB, $error5) = GetClosingPrice($bdate, $stock);
+    if($error5){
+	print "Problem getting close buy price:$error5";
+    }
+    $profitOrLoss = ($closePriceS - $closePriceB)*$qsell;
+    
+    ###Check whether to delete the holding or update the holding
+    if($diff == 0){
+      #Delete holding
+      my $error4 = DeleteAHolding($pid,$bdate,$stock);
+      if($error4){
+	print "Problem deleting a holding:$error4";
+      }
+    }
+    elsif($diff > 0){
+      #update holding
+       $investUpdate = $diff * $closePriceB;
+       my ($error6) = UpdateAHolding($pid, $bdate, $stock, $diff, $investUpdate);
+       if($error6){
+	  print "Problem updating a holding:$error6";
+       }
+    }#end diff > 0
+    
+     print start_form(-name=>'Sell Summary'),
+	h2('Sell Summary'),
+	p,
+	"Sold ".$qsell." units of stock ". $stock. " on ".localtime($sdate),
+	p,
+	"Cash Received: ".$cashback,
+	p,
+	"Profit(+)/Loss(-): ".$profitOrLoss,
+	hidden(-name=>'pid',-default=>[$pid]),
+	hidden(-name=>'stock',-default=>[$stock]),
+	hidden(-name=>'bdate',-default=>[$bdate]),
+	hidden(-name=>'sdate',-default=>[$sdate]),
+	hidden(-name=>'qsell',-default=>[$qsell]),
+	hidden(-name=>'diff',-default=>[$diff]),
+	hidden(-name=>'act',-default=>['sellConfirm']),
+	end_form;
+}#end sell confirm 
 ###################################################################
 
 # WRITE
@@ -747,6 +868,7 @@ sub AddPortfolio {
 sub LookUpPortfolio{
   my($username, $pname) = @_;
   my @col;
+  #SELECT pid from Portfolio where username=1038 and name = 'myportfolio';
   eval {@col=ExecSQL($dbuser,$dbpasswd,"select pid from Portfolio where username=? and name =?","COL",$username, $pname);};
   if ($@) {
       return (undef,$@);
@@ -760,6 +882,7 @@ sub LookUpPortfolio{
 sub AvailableCashInPortfolio{
   my($pid) = @_;
   my @col;
+  #SELECT cashamt from Portfolio where pid='1038';
   eval {@col=ExecSQL($dbuser,$dbpasswd,"select cashamt from Portfolio where pid=?","COL",$pid);};
   if ($@) {
       return (undef,$@);
@@ -842,6 +965,34 @@ sub ManageCash{
   eval{ExecSQL($dbuser,$dbpasswd,"update Portfolio set cashamt=? where pid=?", undef, $amt, $pid);};
   return @;
 
+}
+
+#get a row in holdings based on pid, stock, and date and return $quantity and $iinvest
+sub GetAHolding{
+ 
+  my ($pid,$date,$sym)=@_;
+  my @row;
+  eval { @row=ExecSQL($dbuser,$dbpasswd,"select quantity, iinvest from Holdings where id =? and datestamp =? and symbol=?",'ROW', $pid, $date, $sym); };
+  if($@){
+    return (undef, $@);
+  }
+  else{
+    return (@row, $@);
+  }
+}
+
+#update a row in holdings based on pid, stock, sym with $quantity and $iinvest
+sub UpdateAHolding{
+   my ($pid,$date,$sym,$quantity,$iinvest)=@_;
+   eval{ExecSQL($dbuser,$dbpasswd,"update Holdings set quantity=?, iinvest = ? where id=? and datestamp=? and symbol=?", undef, $quantity, $iinvest, $pid, $date, $sym);};
+  return @;
+}
+
+#delete a row in holdings based on pid, stock, sym
+sub DeleteAHolding{
+   my ($pid,$date,$sym)=@_;
+   eval{ExecSQL($dbuser,$dbpasswd,"delete from Holdings where id=? and datestamp=? and symbol=?", undef, $pid, $date, $sym);};
+  return @;
 }
 #
 # @list=ExecMySQL($querystring, $type, @fill);
