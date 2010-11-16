@@ -1057,7 +1057,7 @@ sub PortfoliosTable {
        if ($strategy eq "b") {
 	  my @holdingrows;
 	  $strategyname = "buy n hold";
-          eval { @holdingrows = ExecSQL($dbuser, $dbpasswd, "select datestamp, symbol, invest from holdings where id = '$pid'"); };
+          eval { @holdingrows = ExecSQL($dbuser, $dbpasswd, "select datestamp, symbol, iinvest from holdings where id = '$pid'"); };
           if ($@) {
 	    return (undef,$@);
           } else {
