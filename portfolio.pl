@@ -324,6 +324,16 @@ if ($action eq "display") {
     }
 }
 
+if($action eq "portfoliosummary") {
+  my $pid = param('pid');
+  my $strategy = param('strategy');
+  my ($table,$error) = StocksTable($pid,$strategy);
+  if ($error) {
+     print "Can't display your stocks because: $error";
+  } else {
+    print "<h2>Your Stocks for Portfolio $pid</h2>$table";
+  }
+}
 # CREATE
 # Allows a user to create a new portfolio
 if($action eq "create"){
@@ -1054,31 +1064,67 @@ sub PortfoliosTable {
     foreach my $row (@rows) {
        my ($name, $cash, $strategy, $pid) = @{$row};
        my ($strategyname, $portfoliosum)=("",0);
-       if ($strategy eq "b") {
-	  my @holdingrows;
-	  $strategyname = "buy n hold";
-          eval { @holdingrows = ExecSQL($dbuser, $dbpasswd, "select datestamp, symbol, iinvest from holdings where id = '$pid'"); };
-          if ($@) {
-	    return (undef,$@);
-          } else {
-	    foreach my $holdingrow (@holdingrows) {
-		my ($date, $symbol, $invest) = @{$holdingrow};
-		$portfoliosum += './shannon_ratchet.pl $symbol $invest 0 $date';
-	    }	
- 	 } 
+       my @holdingrows;
+
+       eval { @holdingrows = ExecSQL($dbuser, $dbpasswd, "select datestamp, symbol, iinvest, quantity from holdings where id = '$pid'"); };
+       if ($@) {
+          return (undef,$@);
+       } else {
+         foreach my $holdingrow (@holdingrows) {
+           my ($date, $symbol, $invest, $quantity) = @{$holdingrow};
+
+
+           if($strategy eq "a"){
+             $strategyname = "buy n hold";
+             $portfoliosum += './shannon_ratchet.pl $symbol $invest 0 $date';
+           }
+
+           elsif ($strategy eq "b") {
+	     $portfoliosum += './shannon_ratchet.pl $symbol $invest 0 $date';
+             $strategyname = "shannon ratchet";
+           }
+           elsif($strategy eq "c"){
+             $strategyname = "markov model";
+           }
+         } 
        } 
-       else {
-          $portfoliosum = "X";
-          $strategyname = "X";
-       }
-       $out.="<tr><td>$name</td><td>$cash</td><td>$strategyname</td><td>$portfoliosum</td></tr>";
+       $out.="<tr><td><a href = \"portfolio.pl?act=portfoliosummary&pid=$pid&strategy=$strategy\">$name</a></td><td>$cash</td><td>$strategyname</td><td>$portfoliosum</td></tr>";
+    }
+    $out.="</table>";
+    return $out;
   }
-  $out.="</table>";
-  return $out;
- }
 }
 
 
+sub StocksTable {
+  my($pid, $strategy) = @_;
+  my @rows;
+  my $out = "";
+  eval { @rows = ExecSQL($dbuser, $dbpasswd, "select datestamp, symbol, iinvest, quantity from holdings where id = '$pid'"); };
+  if ($@) {
+    return (undef,$@);
+  } else {
+    $out.="<table border><tr><td>STOCK</td><td>DATE PURCHASED</td><td>INITIAL INVESTMENT</td><td>INITIAL QUANTITY</td><td>CURRENT VALUE</td></tr>";
+
+    foreach my $row (@rows) {
+       my ($date, $symbol, $invest, $quantity) = @{$row};
+       my $stocksum = 0;
+           if($strategy eq "a"){
+             $stocksum = './shannon_ratchet.pl $symbol $invest 0 $date';
+           }
+
+           elsif ($strategy eq "b") {
+	     $stocksum = './shannon_ratchet.pl $symbol $invest 0 $date';
+           }
+           elsif($strategy eq "c"){
+           }
+       $out.="<tr><td><a href = \"uploadandplot.pl?symbol=$symbol&pid=$pid\">$symbol</a></td><td>$date</td><td>$invest</td><td>$quantity</td><td>$stocksum</td></tr>";
+    }
+    $out.="</table>";
+    $out.="<h3><a href=\"portfolio.pl?act=buy&pid=$pid\">Buy Stock</a></h3>";
+    return $out;
+  }
+}
 #
 # Generate a table of users and their permissions
 # ($table,$error) = UserPermTable()
