@@ -56,12 +56,17 @@ use POSIX;
 $ENV{ORACLE_HOME}="/opt/oracle/product/11.2.0/db_1";
 $ENV{ORACLE_BASE}="/opt/oracle/product/11.2.0";
 $ENV{ORACLE_SID}="CS339";
+ACLE_HOME}="/opt/oracle/product/11.2.0/db_1";
+$ENV{ORACLE_BASE}="/opt/oracle/product/11.2.0";
+$ENV{ORACLE_SID}="CS339";
 
 #
 # You need to override these for access to your database
 #
-my $dbuser="drp925";
-my $dbpasswd="o3d7f737e";
+my $dbuser="ikh831";
+my $dbpasswd="o29de7c3f";
+
+my $dbpasswd="o29de7c3f";
 
 
 #
@@ -301,11 +306,20 @@ if ($action eq "display") {
     #
     # Generate the form
     # This is the part you will be extending
-    #    
-    print h3('These are the portfolios you have');
+    #   
+
+    my ($table,$error)=PortfoliosTable();
+    if ($error) {
+      print "Can't display your portfolios because: $error";
+    } else {
+      print "<h2>Your Portfolios</h2>$table";
+    }
+ 
     #Query for portfolios and display the info
     #To be done by Irene
-    
+   
+     
+ 
     #Also give the option to create a new portfolio
     print h3('<a href="portfolio.pl?act=create" target="output">Create New Portfolio</a>');
     my ($count, $error) = MysqlTest();
@@ -1033,6 +1047,20 @@ sub UserTable {
 		     @rows),$@);
   }
 }
+
+#IKH - 
+sub PortfoliosTable {
+  my @rows;
+  eval { @rows = ExecSQL($dbuser, $dbpasswd, "select name, cashamt, strategy from portfolios where username = $user"); };
+  if ($@) {
+    return (undef,$@);
+  } else {
+    return (MakeTable("2D",
+                     ["Name", "Cash", "Strategy"],
+                     @rows),$@);
+  }
+}
+
 
 #
 # Generate a table of users and their permissions
