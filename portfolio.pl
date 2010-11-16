@@ -1071,7 +1071,7 @@ sub PortfoliosTable {
           $portfoliosum = "X";
           $strategyname = "X";
        }
-       $out.="<tr><td><$name</td><td><$cash</td><td>$strategyname</td><td>$portfoliosum</td></tr>";
+       $out.="<tr><td>$name</td><td>$ $cash</td><td>$strategyname</td><td>$portfoliosum</td></tr>";
   }
   $out.="</table>";
   return $out;
