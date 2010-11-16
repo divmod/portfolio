@@ -405,7 +405,10 @@ if($action eq "buy"){
 				p,
 				"Enter Investment Amount:  ", textfield(-name=>'iamt'),
 				p,
-					"Enter Date Purchased:  ", textfield(-name=>'month',-size=>2), "/",textfield(-name=>'day',-size=>2),"/",textfield(-name=>'year',-size=>4),"(mm/dd/yyyy)",
+				"Enter Date Purchased:  ", 
+				textfield(-name=>'month',-size=>2), "/",
+				textfield(-name=>'day',-size=>2),"/",
+				textfield(-name=>'year',-size=>4),"(mm/dd/yyyy)",
 				p,
 				hidden(-name=>'postrun',-default=>['1']),
 				hidden(-name=>'pid',-default=>[$pid]),
@@ -513,7 +516,7 @@ if ($action eq "cashmgmt") {
 # 
 # Get the portfolios of the user
 #
-print "Username is: $user";
+#print "Username is: $user";
 
 	my (@portfolios, $portfolioerror) = GetPortfolioNames($user);
 	if($portfolioerror){
@@ -536,7 +539,7 @@ print "Username is: $user";
 		my $portfolioname = param('portfolioname');
 		my $transactiontype = param('transaction');
 		my $amount = param('amount');
-		
+
 		my ($pidno,$error1) = LookUpPortfolio($user,$portfolioname);
 		if ($error1) {
 			print "Error in looking up pid number";
@@ -547,7 +550,7 @@ print "Username is: $user";
 			print "Error in getting AvailableCashInPortfolio";
 		}
 
-		print "Postrun! $portfolioname, $transactiontype, $amount, $pidno, $availcash",p;
+#		print "Postrun! $portfolioname, $transactiontype, $amount, $pidno, $availcash",p;
 		if ($transactiontype eq 'Deposit') {
 			$availcash = $availcash + $amount;
 			my $error3 = ManageCash($pidno, $availcash);
@@ -570,8 +573,40 @@ print "Username is: $user";
 			}
 		}
 	}
-}
+} #end cashmgmt action
 
+#
+# GET HISTORIC INFO
+#
+# This action displays the historic info of a stock 
+#
+#
+
+if ($action eq "stockhistory") {
+
+#double check param names
+	my $pid = param('pid');
+	my $fromdate = param('fromdate');
+	my $symbol = param('symbol');
+
+	print start_form(-name=>'StockHistory'),
+				h2('Get Historical Data for Stock \"$symbol\"'),
+#				"Portfolio Name:", scrolling_list(-name=>'portfolioname',-values=>[@portfolios],-size=>5),p,
+				"Time span: ", radio_group(-name=>'period', -values=>['Day','Week','Month','Quarter','Year'], -default=>'Day'),p,
+				"Amount: \$", textfield(-name=>'amount'),
+				p,
+				hidden(-name=>'postrun',-default=>['1']),
+				hidden(-name=>'act',-default=>['cashmgmt']),
+				submit,
+				end_form;
+
+	if (param('postrun')) {
+		my (@history, $historyerror) = GetHistory($symbol);
+		if($historyerror){
+			print "Can't get history: $historyerror";
+		}
+	}
+}
 #end Joy Code section#
 
 
@@ -582,48 +617,48 @@ print "Username is: $user";
 # Write is a "normal" form.
 #
 #
-	if ($action eq "write") { 
+		if ($action eq "write") { 
 #
 # check to see if user can see this
 #
-		if (!UserCan($user,"write-messages")) { 
-			print h2('You do not have the required permissions to write messages.');
-		} else {
+			if (!UserCan($user,"write-messages")) { 
+				print h2('You do not have the required permissions to write messages.');
+			} else {
 #
 # Generate the form.
 # Your reply functionality will be similar to this
 #
-			print start_form(-name=>'Write'),
-						h2('Make blog entry'),
-						"Subject:", textfield(-name=>'subject'),
-						p,
-						textarea(-name=>'post', 
-								-default=>'Write your post here.',
-								-rows=>16,
-								-columns=>80),
-						hidden(-name=>'postrun',-default=>['1']),
-						hidden(-name=>'act',-default=>['write']), 
-						submit,
-						end_form,
-						hr;
+				print start_form(-name=>'Write'),
+							h2('Make blog entry'),
+							"Subject:", textfield(-name=>'subject'),
+							p,
+							textarea(-name=>'post', 
+									-default=>'Write your post here.',
+									-rows=>16,
+									-columns=>80),
+							hidden(-name=>'postrun',-default=>['1']),
+							hidden(-name=>'act',-default=>['write']), 
+							submit,
+							end_form,
+							hr;
 
 #
 # If we're being invoked with parameters, then
 # do the actual posting. 
 #
-			if (param('postrun')){ 
-				my $by=$user;
-				my $text=param('post');
-				my $subject=param('subject');
-				my $error=Post(0,$by,$subject,$text);
-				if ($error) { 
-					print "Can't post message because: $error";
-				} else {
-					print "Posted the following on $subject from $by:<p>$text";
+				if (param('postrun')){ 
+					my $by=$user;
+					my $text=param('post');
+					my $subject=param('subject');
+					my $error=Post(0,$by,$subject,$text);
+					if ($error) { 
+						print "Can't post message because: $error";
+					} else {
+						print "Posted the following on $subject from $by:<p>$text";
+					}
 				}
 			}
 		}
-	}
 
 
 
@@ -632,180 +667,180 @@ print "Username is: $user";
 # Adding and deleting users is a couple of normal forms
 #
 #
-	if ($action eq "users") { 
+		if ($action eq "users") { 
 #
 # check to see if user can see this
 #
-		if (!UserCan($user,"manage-users")) { 
-			print h2('You do not have the required permissions to manage users.');
-		} else {
+			if (!UserCan($user,"manage-users")) { 
+				print h2('You do not have the required permissions to manage users.');
+			} else {
 #
 # Generate the add form.
 #
-			print start_form(-name=>'AddUser'),
-						h2('Add User'),
-						"Name: ", textfield(-name=>'name'),
-						p,
-						"Email: ", textfield(-name=>'email'),
-						p,
-						"Password: ", textfield(-name=>'password'),
-						p,
-						hidden(-name=>'adduserrun',-default=>['1']),
-						hidden(-name=>'act',-default=>['users']),
-						submit,
-						end_form,
-						hr;
+				print start_form(-name=>'AddUser'),
+							h2('Add User'),
+							"Name: ", textfield(-name=>'name'),
+							p,
+							"Email: ", textfield(-name=>'email'),
+							p,
+							"Password: ", textfield(-name=>'password'),
+							p,
+							hidden(-name=>'adduserrun',-default=>['1']),
+							hidden(-name=>'act',-default=>['users']),
+							submit,
+							end_form,
+							hr;
 #
 # Generate the givepermform.
 #
-			print start_form(-name=>'GivePermission'),
-						h2('Give Permission'),
-						"Name: ", textfield(-name=>'name'),
-						p,
-						"Action: ", textfield(-name=>'perm'),
-						hidden(-name=>'givepermrun',-default=>['1']),
-						hidden(-name=>'act',-default=>['users']),p,
-						submit,
-						end_form,
-						hr;
+				print start_form(-name=>'GivePermission'),
+							h2('Give Permission'),
+							"Name: ", textfield(-name=>'name'),
+							p,
+							"Action: ", textfield(-name=>'perm'),
+							hidden(-name=>'givepermrun',-default=>['1']),
+							hidden(-name=>'act',-default=>['users']),p,
+							submit,
+							end_form,
+							hr;
 
 #
 # Generate the revokepermform.
 #
-			print start_form(-name=>'RevokePermission'),
-						h2('Revoke Permission'),
-						"Name: ", textfield(-name=>'name'),
-						p,
-						"Action: ", textfield(-name=>'perm'),
-						hidden(-name=>'revokepermrun',-default=>['1']),
-						hidden(-name=>'act',-default=>['users']),p,
-						submit,
-						end_form,
-						hr;
+				print start_form(-name=>'RevokePermission'),
+							h2('Revoke Permission'),
+							"Name: ", textfield(-name=>'name'),
+							p,
+							"Action: ", textfield(-name=>'perm'),
+							hidden(-name=>'revokepermrun',-default=>['1']),
+							hidden(-name=>'act',-default=>['users']),p,
+							submit,
+							end_form,
+							hr;
 
 #
 # Generate the deleteform.
 # Your delete message functionality may be similar to this
 #
-			print start_form(-name=>'DeleteUser'),
-						h2('Delete User'),
-						"Name: ", textfield(-name=>'name'),
-						p,
-						hidden(-name=>'deluserrun',-default=>['1']),
-						hidden(-name=>'act',-default=>['users']),
-						submit,
-						end_form,
-						hr;
+				print start_form(-name=>'DeleteUser'),
+							h2('Delete User'),
+							"Name: ", textfield(-name=>'name'),
+							p,
+							hidden(-name=>'deluserrun',-default=>['1']),
+							hidden(-name=>'act',-default=>['users']),
+							submit,
+							end_form,
+							hr;
 
 #
 # Run the user add
 #
-			if (param('adduserrun')) { 
-				my $name=param('name');
-				my $email=param('email');
-				my $password=param('password');
-				my $error;
-				$error=UserAdd($name,$password,$email);
-				if ($error) { 
-					print "Can't add user because: $error";
-				} else {
-					print "Added user $name $email\n";
+				if (param('adduserrun')) { 
+					my $name=param('name');
+					my $email=param('email');
+					my $password=param('password');
+					my $error;
+					$error=UserAdd($name,$password,$email);
+					if ($error) { 
+						print "Can't add user because: $error";
+					} else {
+						print "Added user $name $email\n";
+					}
 				}
-			}
 #
 # Run the user delete
 #
-			if (param('deluserrun')) { 
-				my $name=param('name');
-				my $error=UserDel($name);
-				if ($error) { 
-					print "Can't delete user because: $error";
-				} else { 
-					print "User $name deleted.";
+				if (param('deluserrun')) { 
+					my $name=param('name');
+					my $error=UserDel($name);
+					if ($error) { 
+						print "Can't delete user because: $error";
+					} else { 
+						print "User $name deleted.";
+					}
 				}
-			}
 #
 # Run givepermission
 #
-			if (param('givepermrun')) { 
-				my $name=param('name');
-				my $perm=param('perm');
-				my $error=GiveUserPerm($name,$perm);
-				if ($error) { 
-					print "Can't give $name permission $perm because: $error";
-				} else { 
-					print "User $name given permission $perm.";
+				if (param('givepermrun')) { 
+					my $name=param('name');
+					my $perm=param('perm');
+					my $error=GiveUserPerm($name,$perm);
+					if ($error) { 
+						print "Can't give $name permission $perm because: $error";
+					} else { 
+						print "User $name given permission $perm.";
+					}
 				}
-			}
 #
 # Run givepermission
 #
-			if (param('revokepermrun')) { 
-				my $name=param('name');
-				my $perm=param('perm');
-				my $error=RevokeUserPerm($name,$perm);
-				if ($error) { 
-					print "Can't revoke $name permission $perm because: $error";
-				} else { 
-					print "User $name has had permission $perm revoked.";
+				if (param('revokepermrun')) { 
+					my $name=param('name');
+					my $perm=param('perm');
+					my $error=RevokeUserPerm($name,$perm);
+					if ($error) { 
+						print "Can't revoke $name permission $perm because: $error";
+					} else { 
+						print "User $name has had permission $perm revoked.";
+					}
 				}
-			}
 #
 # Print tables users Permissions
 #
-			my ($table,$error);
-			($table,$error)=PermTable();
-			if ($error) { 
-				print "Can't display permissions table because: $error";
-			} else {
-				print "<h2>Available Permissions</h2>$table";
-			}
-			($table,$error)=UserTable();
-			if ($error) { 
-				print "Can't display user table because: $error";
-			} else {
-				print "<h2>Registered Users</h2>$table";
-			}
-			($table,$error)=UserPermTable();
-			if ($error) { 
-				print "Can't display user permission table because: $error";
-			} else {
-				print "<h2>Users and their permissions</h2>$table";
+				my ($table,$error);
+				($table,$error)=PermTable();
+				if ($error) { 
+					print "Can't display permissions table because: $error";
+				} else {
+					print "<h2>Available Permissions</h2>$table";
+				}
+				($table,$error)=UserTable();
+				if ($error) { 
+					print "Can't display user table because: $error";
+				} else {
+					print "<h2>Registered Users</h2>$table";
+				}
+				($table,$error)=UserPermTable();
+				if ($error) { 
+					print "Can't display user permission table because: $error";
+				} else {
+					print "<h2>Users and their permissions</h2>$table";
+				}
 			}
 		}
-	}
 
 #
 # Generate debugging output if anything is enabled.
 #
 #
-	if ($show_params || $show_cookies || $show_sqlinput || $show_sqloutput) { 
-		print hr, p, hr,p, h2('Debugging Output');
-		if ($show_params) { 
-			print h3('Parameters');
-			print "<menu>";
-			print map { "<li>$_ => ".param($_)} param();
-			print "</menu>";
-		}
-		if ($show_cookies) { 
-			print h3('Cookies');
-			print "<menu>";
-			print map { "<li>$_ => ".cookie($_)} cookie();
-			print "</menu>";
-		}
-		if ($show_sqlinput || $show_sqloutput) { 
-			my $max= $show_sqlinput ?  $#sqlinput : $#sqloutput;
-			print h3('SQL');
-			print "<menu>";
-			for (my $i=0;$i<=$max;$i++) { 
-				if ($show_sqlinput) { print "<li><b>Input:</b> $sqlinput[$i]";}
-				if ($show_sqloutput) { print "<li><b>Output:</b> $sqloutput[$i]";}
+		if ($show_params || $show_cookies || $show_sqlinput || $show_sqloutput) { 
+			print hr, p, hr,p, h2('Debugging Output');
+			if ($show_params) { 
+				print h3('Parameters');
+				print "<menu>";
+				print map { "<li>$_ => ".param($_)} param();
+				print "</menu>";
 			}
-			print "</menu>";
-		}
-	} 
+			if ($show_cookies) { 
+				print h3('Cookies');
+				print "<menu>";
+				print map { "<li>$_ => ".cookie($_)} cookie();
+				print "</menu>";
+			}
+			if ($show_sqlinput || $show_sqloutput) { 
+				my $max= $show_sqlinput ?  $#sqlinput : $#sqloutput;
+				print h3('SQL');
+				print "<menu>";
+				for (my $i=0;$i<=$max;$i++) { 
+					if ($show_sqlinput) { print "<li><b>Input:</b> $sqlinput[$i]";}
+					if ($show_sqloutput) { print "<li><b>Output:</b> $sqloutput[$i]";}
+				}
+				print "</menu>";
+			}
+		} 
 
-	print end_html;
+		print end_html;
 
 #
 # The main line is finished at this point. 
@@ -814,70 +849,70 @@ print "Username is: $user";
 
 #############Portfolio functionality##########
 #Insert a row in Portfolio table
-	sub AddPortfolio {
-		my ($username,$pname, $cashamt, $strategy)=@_;
+		sub AddPortfolio {
+			my ($username,$pname, $cashamt, $strategy)=@_;
 #INSERT INTO Portfolio(pid, username, name, cashamt, strategy) VALUES(pid.nextval,'root','myportfolio', 10000.00, 'b');
-		eval { ExecSQL($dbuser,$dbpasswd,"insert into Portfolio(pid, username, name, cashamt, strategy) ".
-				"select pid.nextval, ?, ?, ?, ? from dual",
-				undef, $username, $pname, $cashamt, $strategy); };
-		return $@;
-	}
+			eval { ExecSQL($dbuser,$dbpasswd,"insert into Portfolio(pid, username, name, cashamt, strategy) ".
+					"select pid.nextval, ?, ?, ?, ? from dual",
+					undef, $username, $pname, $cashamt, $strategy); };
+			return $@;
+		}
 
 #get the pid of Portfolio based on username and name
-	sub LookUpPortfolio{
-		my($username, $pname) = @_;
-		my @col;
-		eval {@col=ExecSQL($dbuser,$dbpasswd,"select pid from Portfolio where username=? and name =?","COL",$username, $pname);};
-		if ($@) {
-			return (undef,$@);
+		sub LookUpPortfolio{
+			my($username, $pname) = @_;
+			my @col;
+			eval {@col=ExecSQL($dbuser,$dbpasswd,"select pid from Portfolio where username=? and name =?","COL",$username, $pname);};
+			if ($@) {
+				return (undef,$@);
+			}
+			else {
+				return ($col[0],$@);
+			}
 		}
-		else {
-			return ($col[0],$@);
-		}
-	}
 
 #get the available cash in Portfolio based on pid
-	sub AvailableCashInPortfolio{
-		my($pid) = @_;
-		my @col;
-		eval {@col=ExecSQL($dbuser,$dbpasswd,"select cashamt from Portfolio where pid=?","COL",$pid);};
-		if ($@) {
-			return (undef,$@);
+		sub AvailableCashInPortfolio{
+			my($pid) = @_;
+			my @col;
+			eval {@col=ExecSQL($dbuser,$dbpasswd,"select cashamt from Portfolio where pid=?","COL",$pid);};
+			if ($@) {
+				return (undef,$@);
+			}
+			else {
+				return ($col[0],$@);
+			}
 		}
-		else {
-			return ($col[0],$@);
-		}
-	}
 
 #testing mysql
-	sub MysqlTest{
+		sub MysqlTest{
 #my($sym) = @_;
-		my @col;
-		eval {@col=ExecMySQL("select count(*) from symbols","COL");};
-		if ($@) {
-			return (undef,$@);
+			my @col;
+			eval {@col=ExecMySQL("select count(*) from symbols","COL");};
+			if ($@) {
+				return (undef,$@);
+			}
+			else {
+				return ($col[0],$@);
+			}
 		}
-		else {
-			return ($col[0],$@);
-		}
-	}
 
 #list of stocks based on search
 
-	sub GetStocks{
+		sub GetStocks{
 #my $search = @_;
 #$search = "^".$search;
-		my @cols;
+			my @cols;
 #eval {@rows=ExecMySQL("select symbol from symbols where symbol regexp ?","ROW", $search);};
-		eval {@cols=ExecMySQL("select symbol from symbols","COL");};
-		if ($@) {
-			return (undef,$@);
-		}
-		else {
-			return (@cols,$@);
-		}
+			eval {@cols=ExecMySQL("select symbol from symbols","COL");};
+			if ($@) {
+				return (undef,$@);
+			}
+			else {
+				return (@cols,$@);
+			}
 
-	}
+		}
 
 #begin Joy Code Section#
 
@@ -887,65 +922,65 @@ print "Username is: $user";
 # Lists the portfolio names owned by the user
 #
 
-	sub GetPortfolioNames {
+		sub GetPortfolioNames {
 #		my $usern = @_;
 #		print "Username in GetPortfiolioNames Function: $usern, $user";
-		my @cols;
-		eval {@cols=ExecSQL($dbuser,$dbpasswd,"select name from Portfolio where username=?","COL",$user);};
-		if ($@) {
-			return (undef,$@);
+			my @cols;
+			eval {@cols=ExecSQL($dbuser,$dbpasswd,"select name from Portfolio where username=?","COL",$user);};
+			if ($@) {
+				return (undef,$@);
+			}
+			else {
+				return (@cols,$@);
+			}
 		}
-		else {
-			return (@cols,$@);
-		}
-	}
 
 #end Joy Code Section#
 
 #get closing price of the stock on based on the date
-	sub StockExistsOnDate{
-		my($date, $sym) = @_;
-		my @col;
+		sub StockExistsOnDate{
+			my($date, $sym) = @_;
+			my @col;
 #select count(*) from StocksDaily where date=1151470800 and symbol='GOOG'; 
-		eval {@col=ExecMySQL("select count(*) from StocksDaily where date=? and symbol=?","COL",$date,$sym);};
-		if ($@) {
-			return (undef,$@);
+			eval {@col=ExecMySQL("select count(*) from StocksDaily where date=? and symbol=?","COL",$date,$sym);};
+			if ($@) {
+				return (undef,$@);
+			}
+			else {
+				return ($col[0]>0,$@);
+			}
 		}
-		else {
-			return ($col[0]>0,$@);
-		}
-	}
 
 #get closing price of the stock on based on the date
-	sub GetClosingPrice{
-		my($date, $sym) = @_;
-		my @col;
+		sub GetClosingPrice{
+			my($date, $sym) = @_;
+			my @col;
 #select close from StocksDaily where date=1151470800 and symbol='GOOG'; 
-		eval {@col=ExecMySQL("select close from StocksDaily where date=? and symbol=?","COL",$date,$sym);};
-		if ($@) {
-			return (undef,$@);
+			eval {@col=ExecMySQL("select close from StocksDaily where date=? and symbol=?","COL",$date,$sym);};
+			if ($@) {
+				return (undef,$@);
+			}
+			else {
+				return ($col[0],$@);
+			}
 		}
-		else {
-			return ($col[0],$@);
-		}
-	}
 
 # insert a row into holdings.
-	sub AddToHoldings{
+		sub AddToHoldings{
 
 #insert into Holdings(id, datestamp, symbol, quantity, iinvest) values(2081, 1151470800 , 'GOOG', 10, 500);
-		my ($pid,$date, $sym, $quant, $iinvest)=@_;
-		eval { ExecSQL($dbuser,$dbpasswd,"insert into Holdings(id, datestamp, symbol, quantity, iinvest) values(?, ?, ?, ?, ?)",undef, $pid, $date, $sym, $quant, $iinvest); };
-		return $@;
-	}
+			my ($pid,$date, $sym, $quant, $iinvest)=@_;
+			eval { ExecSQL($dbuser,$dbpasswd,"insert into Holdings(id, datestamp, symbol, quantity, iinvest) values(?, ?, ?, ?, ?)",undef, $pid, $date, $sym, $quant, $iinvest); };
+			return $@;
+		}
 
 # update the cashamt
-	sub ManageCash{
-		my ($pid, $amt) = @_;
+		sub ManageCash{
+			my ($pid, $amt) = @_;
 #update Portfolio set cashamt=7000 where pid=1035;
-		eval{ExecSQL($dbuser,$dbpasswd,"update Portfolio set cashamt=? where pid=?", undef, $amt, $pid);};
-		return @;
-	}
+			eval{ExecSQL($dbuser,$dbpasswd,"update Portfolio set cashamt=? where pid=?", undef, $amt, $pid);};
+			return @;
+		}
 
 
 #
@@ -958,75 +993,75 @@ print "Username is: $user";
 #
 # ExecSQL executes "die" on failure.
 #
-	sub ExecMySQL {
-		my ($querystring, $type, @fill) =@_;
-		my $user = "cs339";
-		my $passwd = "cs339";
-		my $db = "cs339";
-		if ($show_sqlinput) { 
+		sub ExecMySQL {
+			my ($querystring, $type, @fill) =@_;
+			my $user = "cs339";
+			my $passwd = "cs339";
+			my $db = "cs339";
+			if ($show_sqlinput) { 
 # if we are recording inputs, just push the query string and fill list onto the 
 # global sqlinput list
-			push @sqlinput, "$querystring (".join(",",map {"'$_'"} @fill).")";
-		}
-		my $dbh = DBI->connect("DBI:mysql:$db",$user,$passwd);
-		if (not $dbh) { 
+				push @sqlinput, "$querystring (".join(",",map {"'$_'"} @fill).")";
+			}
+			my $dbh = DBI->connect("DBI:mysql:$db",$user,$passwd);
+			if (not $dbh) { 
 # if the connect failed, record the reason to the sqloutput list (if set)
 # and then die.
-			if ($show_sqloutput) { 
-				push @sqloutput, "<b>ERROR: Can't connect to the database because of ".$DBI::errstr."</b>";
+				if ($show_sqloutput) { 
+					push @sqloutput, "<b>ERROR: Can't connect to the database because of ".$DBI::errstr."</b>";
+				}
+				die "Can't connect to database because of ".$DBI::errstr;
 			}
-			die "Can't connect to database because of ".$DBI::errstr;
-		}
-		my $sth = $dbh->prepare($querystring);
-		if (not $sth) { 
+			my $sth = $dbh->prepare($querystring);
+			if (not $sth) { 
 #
 # If prepare failed, then record reason to sqloutput and then die
 #
-			if ($show_sqloutput) { 
-				push @sqloutput, "<b>ERROR: Can't prepare '$querystring' because of ".$DBI::errstr."</b>";
+				if ($show_sqloutput) { 
+					push @sqloutput, "<b>ERROR: Can't prepare '$querystring' because of ".$DBI::errstr."</b>";
+				}
+				my $errstr="Can't prepare $querystring because of ".$DBI::errstr;
+				$dbh->disconnect();
+				die $errstr;
 			}
-			my $errstr="Can't prepare $querystring because of ".$DBI::errstr;
-			$dbh->disconnect();
-			die $errstr;
-		}
-		if (not $sth->execute(@fill)) { 
+			if (not $sth->execute(@fill)) { 
 #
 # if exec failed, record to sqlout and die.
-			if ($show_sqloutput) { 
-				push @sqloutput, "<b>ERROR: Can't execute '$querystring' with fill (".join(",",map {"'$_'"} @fill).") because of ".$DBI::errstr."</b>";
+				if ($show_sqloutput) { 
+					push @sqloutput, "<b>ERROR: Can't execute '$querystring' with fill (".join(",",map {"'$_'"} @fill).") because of ".$DBI::errstr."</b>";
+				}
+				my $errstr="Can't execute $querystring with fill (".join(",",map {"'$_'"} @fill).") because of ".$DBI::errstr;
+				$dbh->disconnect();
+				die $errstr;
 			}
-			my $errstr="Can't execute $querystring with fill (".join(",",map {"'$_'"} @fill).") because of ".$DBI::errstr;
-			$dbh->disconnect();
-			die $errstr;
-		}
 #
 # The rest assumes that the data will be forthcoming.
 #
 #
-		my @data;
-		if (defined $type and $type eq "ROW") { 
-			@data=$sth->fetchrow_array();
+			my @data;
+			if (defined $type and $type eq "ROW") { 
+				@data=$sth->fetchrow_array();
+				$sth->finish();
+				if ($show_sqloutput) {push @sqloutput, MakeTable("ROW",undef,@data);}
+				$dbh->disconnect();
+				return @data;
+			}
+			my @ret;
+			while (@data=$sth->fetchrow_array()) {
+				push @ret, [@data];
+			}
+			if (defined $type and $type eq "COL") { 
+				@data = map {$_->[0]} @ret;
+				$sth->finish();
+				if ($show_sqloutput) {push @sqloutput, MakeTable("COL",undef,@data);}
+				$dbh->disconnect();
+				return @data;
+			}
 			$sth->finish();
-			if ($show_sqloutput) {push @sqloutput, MakeTable("ROW",undef,@data);}
+			if ($show_sqloutput) {push @sqloutput, MakeTable("2D",undef,@ret);}
 			$dbh->disconnect();
-			return @data;
+			return @ret;
 		}
-		my @ret;
-		while (@data=$sth->fetchrow_array()) {
-			push @ret, [@data];
-		}
-		if (defined $type and $type eq "COL") { 
-			@data = map {$_->[0]} @ret;
-			$sth->finish();
-			if ($show_sqloutput) {push @sqloutput, MakeTable("COL",undef,@data);}
-			$dbh->disconnect();
-			return @data;
-		}
-		$sth->finish();
-		if ($show_sqloutput) {push @sqloutput, MakeTable("2D",undef,@ret);}
-		$dbh->disconnect();
-		return @ret;
-	}
 
 #
 # @list=ExecSQL($user, $password, $querystring, $type, @fill);
@@ -1038,123 +1073,125 @@ print "Username is: $user";
 #
 # ExecSQL executes "die" on failure.
 #
-	sub ExecSQL {
-		my ($user, $passwd, $querystring, $type, @fill) =@_;
-		if ($show_sqlinput) { 
+		sub ExecSQL {
+			my ($user, $passwd, $querystring, $type, @fill) =@_;
+			if ($show_sqlinput) { 
 # if we are recording inputs, just push the query string and fill list onto the 
 # global sqlinput list
-			push @sqlinput, "$querystring (".join(",",map {"'$_'"} @fill).")";
-		}
-		my $dbh = DBI->connect("DBI:Oracle:",$user,$passwd);
-		if (not $dbh) { 
+				push @sqlinput, "$querystring (".join(",",map {"'$_'"} @fill).")";
+			}
+			my $dbh = DBI->connect("DBI:Oracle:",$user,$passwd);
+			if (not $dbh) { 
 # if the connect failed, record the reason to the sqloutput list (if set)
 # and then die.
-			if ($show_sqloutput) { 
-				push @sqloutput, "<b>ERROR: Can't connect to the database because of ".$DBI::errstr."</b>";
+				if ($show_sqloutput) { 
+					push @sqloutput, "<b>ERROR: Can't connect to the database because of ".$DBI::errstr."</b>";
+				}
+				die "Can't connect to database because of ".$DBI::errstr;
 			}
-			die "Can't connect to database because of ".$DBI::errstr;
-		}
-		my $sth = $dbh->prepare($querystring);
-		if (not $sth) { 
+			my $sth = $dbh->prepare($querystring);
+			if (not $sth) { 
 #
 # If prepare failed, then record reason to sqloutput and then die
 #
-			if ($show_sqloutput) { 
-				push @sqloutput, "<b>ERROR: Can't prepare '$querystring' because of ".$DBI::errstr."</b>";
+				if ($show_sqloutput) { 
+					push @sqloutput, "<b>ERROR: Can't prepare '$querystring' because of ".$DBI::errstr."</b>";
+				}
+				my $errstr="Can't prepare $querystring because of ".$DBI::errstr;
+				$dbh->disconnect();
+				die $errstr;
 			}
-			my $errstr="Can't prepare $querystring because of ".$DBI::errstr;
-			$dbh->disconnect();
-			die $errstr;
-		}
-		if (not $sth->execute(@fill)) { 
+			if (not $sth->execute(@fill)) { 
 #
 # if exec failed, record to sqlout and die.
-			if ($show_sqloutput) { 
-				push @sqloutput, "<b>ERROR: Can't execute '$querystring' with fill (".join(",",map {"'$_'"} @fill).") because of ".$DBI::errstr."</b>";
+				if ($show_sqloutput) { 
+					push @sqloutput, "<b>ERROR: Can't execute '$querystring' with fill (".join(",",map {"'$_'"} @fill).") because of ".$DBI::errstr."</b>";
+				}
+				my $errstr="Can't execute $querystring with fill (".join(",",map {"'$_'"} @fill).") because of ".$DBI::errstr;
+				$dbh->disconnect();
+				die $errstr;
 			}
-			my $errstr="Can't execute $querystring with fill (".join(",",map {"'$_'"} @fill).") because of ".$DBI::errstr;
-			$dbh->disconnect();
-			die $errstr;
-		}
 #
 # The rest assumes that the data will be forthcoming.
 #
 #
-		my @data;
-		if (defined $type and $type eq "ROW") { 
-			@data=$sth->fetchrow_array();
+			my @data;
+			if (defined $type and $type eq "ROW") { 
+				@data=$sth->fetchrow_array();
+				$sth->finish();
+				if ($show_sqloutput) {push @sqloutput, MakeTable("ROW",undef,@data);}
+				$dbh->disconnect();
+				return @data;
+			}
+			my @ret;
+			while (@data=$sth->fetchrow_array()) {
+				push @ret, [@data];
+			}
+			if (defined $type and $type eq "COL") { 
+				@data = map {$_->[0]} @ret;
+				$sth->finish();
+				if ($show_sqloutput) {push @sqloutput, MakeTable("COL",undef,@data);}
+				$dbh->disconnect();
+				return @data;
+			}
 			$sth->finish();
-			if ($show_sqloutput) {push @sqloutput, MakeTable("ROW",undef,@data);}
+			if ($show_sqloutput) {push @sqloutput, MakeTable("2D",undef,@ret);}
 			$dbh->disconnect();
-			return @data;
+			return @ret;
 		}
-		my @ret;
-		while (@data=$sth->fetchrow_array()) {
-			push @ret, [@data];
-		}
-		if (defined $type and $type eq "COL") { 
-			@data = map {$_->[0]} @ret;
-			$sth->finish();
-			if ($show_sqloutput) {push @sqloutput, MakeTable("COL",undef,@data);}
-			$dbh->disconnect();
-			return @data;
-		}
-		$sth->finish();
-		if ($show_sqloutput) {push @sqloutput, MakeTable("2D",undef,@ret);}
-		$dbh->disconnect();
-		return @ret;
-	}
+
+
 ##############################################
 #
 # Generate a table of available permissions
 # ($table,$error) = PermTable()
 # $error false on success, error string on failure
 #
-	sub PermTable {
-		my @rows;
-		eval { @rows = ExecSQL($dbuser, $dbpasswd, "select action from blog_actions"); }; 
-		if ($@) { 
-			return (undef,$@);
-		} else {
-			return (MakeTable("2D",
-						["Perm"],
-						@rows),$@);
+		sub PermTable {
+			my @rows;
+			eval { @rows = ExecSQL($dbuser, $dbpasswd, "select action from blog_actions"); }; 
+			if ($@) { 
+				return (undef,$@);
+			} else {
+				return (MakeTable("2D",
+							["Perm"],
+							@rows),$@);
+			}
 		}
-	}
 
 #
 # Generate a table of users
 # ($table,$error) = UserTable()
 # $error false on success, error string on failure
 #
-	sub UserTable {
-		my @rows;
-		eval { @rows = ExecSQL($dbuser, $dbpasswd, "select name, email from blog_users order by name"); }; 
-		if ($@) { 
-			return (undef,$@);
-		} else {
-			return (MakeTable("2D",
-						["Name", "Email"],
-						@rows),$@);
+		sub UserTable {
+			my @rows;
+			eval { @rows = ExecSQL($dbuser, $dbpasswd, "select name, email from blog_users order by name"); }; 
+			if ($@) { 
+				return (undef,$@);
+			} else {
+				return (MakeTable("2D",
+							["Name", "Email"],
+							@rows),$@);
+			}
 		}
-	}
 
 #
 # Generate a table of users and their permissions
 # ($table,$error) = UserPermTable()
 # $error false on success, error string on failure
 #
-	sub UserPermTable {
-		my @rows;
-		eval { @rows = ExecSQL($dbuser, $dbpasswd, "select blog_users.name, blog_permissions.action from blog_users, blog_permissions where blog_users.name=blog_permissions.name order by blog_users.name"); }; 
-		if ($@) { 
-			return (undef,$@);
-		} else {
-			return (MakeTable("2D",
-						["Name", "Permission"],
-						@rows),$@);
+		sub UserPermTable {
+			my @rows;
+			eval { @rows = ExecSQL($dbuser, $dbpasswd, "select blog_users.name, blog_permissions.action from blog_users, blog_permissions where blog_users.name=blog_permissions.name order by blog_users.name"); }; 
+			if ($@) { 
+				return (undef,$@);
+			} else {
+				return (MakeTable("2D",
+							["Name", "Permission"],
+							@rows),$@);
+			}
 		}
-	}
 
 #
 # Add a user
@@ -1164,21 +1201,21 @@ print "Username is: $user";
 # 
 # UserAdd($name,$password,$email)
 #
-	sub UserAdd { 
-		eval { ExecSQL($dbuser,$dbpasswd,
-				"insert into blog_users (name,password,email) values (?,?,?)",undef,@_);};
+		sub UserAdd { 
+			eval { ExecSQL($dbuser,$dbpasswd,
+					"insert into blog_users (name,password,email) values (?,?,?)",undef,@_);};
 
-		return $@;
-	}
+			return $@;
+		}
 
 #
 # Delete a user
 # returns false on success, $error string on failure
 # 
-	sub UserDel { 
-		eval {ExecSQL($dbuser,$dbpasswd,"delete from blog_users where name=?", undef, @_);};
-		return $@;
-	}
+		sub UserDel { 
+			eval {ExecSQL($dbuser,$dbpasswd,"delete from blog_users where name=?", undef, @_);};
+			return $@;
+		}
 
 
 #
@@ -1188,11 +1225,11 @@ print "Username is: $user";
 # 
 # GiveUserPerm($name,$perm)
 #
-	sub GiveUserPerm { 
-		eval { ExecSQL($dbuser,$dbpasswd,
-				"insert into blog_permissions (name,action) values (?,?)",undef,@_);};
-		return $@;
-	}
+		sub GiveUserPerm { 
+			eval { ExecSQL($dbuser,$dbpasswd,
+					"insert into blog_permissions (name,action) values (?,?)",undef,@_);};
+			return $@;
+		}
 
 #
 # Revoke a user's permission
@@ -1201,11 +1238,11 @@ print "Username is: $user";
 # 
 # RevokeUserPerm($name,$perm)
 #
-	sub RevokeUserPerm { 
-		eval { ExecSQL($dbuser,$dbpasswd,
-				"delete from blog_permissions where name=? and action=?",undef,@_);};
-		return $@;
-	}
+		sub RevokeUserPerm { 
+			eval { ExecSQL($dbuser,$dbpasswd,
+					"delete from blog_permissions where name=? and action=?",undef,@_);};
+			return $@;
+		}
 
 #
 #
@@ -1214,16 +1251,16 @@ print "Username is: $user";
 # $ok = ValidUser($user,$password)
 #
 #
-	sub ValidUser {
-		my ($user,$password)=@_;
-		my @col;
-		eval {@col=ExecSQL($dbuser,$dbpasswd, "select count(*) from Users where username=? and password=?","COL",$user,$password);};
-		if ($@) { 
-			return 0;
-		} else {
-			return $col[0]>0;
+		sub ValidUser {
+			my ($user,$password)=@_;
+			my @col;
+			eval {@col=ExecSQL($dbuser,$dbpasswd, "select count(*) from Users where username=? and password=?","COL",$user,$password);};
+			if ($@) { 
+				return 0;
+			} else {
+				return $col[0]>0;
+			}
 		}
-	}
 
 
 #
@@ -1232,16 +1269,16 @@ print "Username is: $user";
 #
 # $ok = UserCan($user,$action)
 #
-	sub UserCan {
-		my ($user,$action)=@_;
-		my @col;
-		eval {@col= ExecSQL($dbuser,$dbpasswd, "select count(*) from blog_permissions where name=? and action=?","COL",$user,$action);};
-		if ($@) { 
-			return 0;
-		} else {
-			return $col[0]>0;
+		sub UserCan {
+			my ($user,$action)=@_;
+			my @col;
+			eval {@col= ExecSQL($dbuser,$dbpasswd, "select count(*) from blog_permissions where name=? and action=?","COL",$user,$action);};
+			if ($@) { 
+				return 0;
+			} else {
+				return $col[0]>0;
+			}
 		}
-	}
 
 
 
@@ -1257,8 +1294,8 @@ print "Username is: $user";
 #            zero if you are not responding to a message
 # $author, $subject, $text => self-explanatory
 #
-	sub Post { 
-		my ($respid,$author, $subject, $text) = @_;
+		sub Post { 
+			my ($respid,$author, $subject, $text) = @_;
 
 #
 # this idiom, eval and then $@, is an exception handling trick in perl
@@ -1266,11 +1303,11 @@ print "Username is: $user";
 # eval, $@ will either be false or will contain the string with which
 # die was called.
 #
-		eval { ExecSQL($dbuser,$dbpasswd,"insert into blog_messages (id,respid,author,subject,time,text) ".
-				"select blog_message_id.nextval, ?, ?, ?, ?, ? from dual",
-				undef, $respid, $author, $subject, time(), $text); };
-		return $@ ;
-	}
+			eval { ExecSQL($dbuser,$dbpasswd,"insert into blog_messages (id,respid,author,subject,time,text) ".
+					"select blog_message_id.nextval, ?, ?, ?, ?, ? from dual",
+					undef, $respid, $author, $subject, time(), $text); };
+			return $@ ;
+		}
 
 
 #
@@ -1280,20 +1317,20 @@ print "Username is: $user";
 #
 # ($table,$error) = MessageSummary();
 #
-	sub MessageSummary {
-		my @rows;
-		eval { @rows = ExecSQL($dbuser,$dbpasswd,
-				"select author,subject,time from blog_messages where id<>0 order by time");};
-		if ($@) { 
-			return (undef,$@);
-		} else {
+		sub MessageSummary {
+			my @rows;
+			eval { @rows = ExecSQL($dbuser,$dbpasswd,
+					"select author,subject,time from blog_messages where id<>0 order by time");};
+			if ($@) { 
+				return (undef,$@);
+			} else {
 # Convert time values to pretty printed version
-			foreach my $r (@rows) {
-				$r->[2]=localtime($r->[2]);
+				foreach my $r (@rows) {
+					$r->[2]=localtime($r->[2]);
+				}
+				return (MakeTable("2D", ["Author","Subject","Time"],@rows),$@);
 			}
-			return (MakeTable("2D", ["Author","Subject","Time"],@rows),$@);
 		}
-	}
 
 #
 # Generate a list of messages that match the criteria 
@@ -1302,34 +1339,34 @@ print "Username is: $user";
 #
 # ($html,$error) = MessageQuery($from,$to,$by)
 #
-	sub MessageQuery {
-		my ($from, $to, $by) = @_;
+		sub MessageQuery {
+			my ($from, $to, $by) = @_;
 
-		my $timefrom=parsedate($from);
-		my $timeto=parsedate($to);
+			my $timefrom=parsedate($from);
+			my $timeto=parsedate($to);
 
-		my @msgs;
-		eval {@msgs=ExecSQL($dbuser,$dbpasswd,"select id, respid, author, subject, time, text from blog_messages where id<>0 order by time");};
-		if ($@) { 
-			return (undef,$@);
-		} else {
-			my $msg;
-			my $out="";
-			$out.="<h3>Messages from $timefrom to $timeto by '$by'<h3>";
-			if ($msg<0) { 
-				$out.="There are no messages";
+			my @msgs;
+			eval {@msgs=ExecSQL($dbuser,$dbpasswd,"select id, respid, author, subject, time, text from blog_messages where id<>0 order by time");};
+			if ($@) { 
+				return (undef,$@);
+			} else {
+				my $msg;
+				my $out="";
+				$out.="<h3>Messages from $timefrom to $timeto by '$by'<h3>";
+				if ($msg<0) { 
+					$out.="There are no messages";
+				}
+				foreach $msg (@msgs) { 
+					my ($id, $respid, $author, $subject, $time, $text) = @{$msg};
+					$out.="<table border><tr><td><b>id:</b></td><td>$id</td><td><b>respid:</b></td><td>$respid</td><td><b>Time:</b></td><td>".localtime($time)."</td></tr>";
+					$out.="<tr><td><b>author:</b></td><td colspan=5>$author</td></tr>";
+					$out.="<tr><td><b>subject:</b></td><td colspan=5>$subject</td></tr>";
+					$out.="<tr><td colspan=6>$text</td></tr>";
+					$out.="</table>";
+				}
+				return ($out,$@);
 			}
-			foreach $msg (@msgs) { 
-				my ($id, $respid, $author, $subject, $time, $text) = @{$msg};
-				$out.="<table border><tr><td><b>id:</b></td><td>$id</td><td><b>respid:</b></td><td>$respid</td><td><b>Time:</b></td><td>".localtime($time)."</td></tr>";
-				$out.="<tr><td><b>author:</b></td><td colspan=5>$author</td></tr>";
-				$out.="<tr><td><b>subject:</b></td><td colspan=5>$subject</td></tr>";
-				$out.="<tr><td colspan=6>$text</td></tr>";
-				$out.="</table>";
-			}
-			return ($out,$@);
 		}
-	}
 
 #
 # Given a list of scalars, or a list of references to lists, generates
@@ -1345,48 +1382,48 @@ print "Username is: $user";
 #
 # $html = MakeTable($type, $headerlistref,@list);
 #
-	sub MakeTable {
-		my ($type,$headerlistref,@list)=@_;
-		my $out;
+		sub MakeTable {
+			my ($type,$headerlistref,@list)=@_;
+			my $out;
 #
 # Check to see if there is anything to output
 #
-		if ((defined $headerlistref) || ($#list>=0)) {
+			if ((defined $headerlistref) || ($#list>=0)) {
 # if there is, begin a table
 #
-			$out="<table border>";
+				$out="<table border>";
 #
 # if there is a header list, then output it in bold
 #
-			if (defined $headerlistref) { 
-				$out.="<tr>".join("",(map {"<td><b>$_</b></td>"} @{$headerlistref}))."</tr>";
-			}
+				if (defined $headerlistref) { 
+					$out.="<tr>".join("",(map {"<td><b>$_</b></td>"} @{$headerlistref}))."</tr>";
+				}
 #
 # If it's a single row, just output it in an obvious way
 #
-			if ($type eq "ROW") { 
+				if ($type eq "ROW") { 
 #
 # map {code} @list means "apply this code to every member of the list
 # and return the modified list.  $_ is the current list member
 #
-				$out.="<tr>".(map {"<td>$_</td>"} @list)."</tr>";
-			} elsif ($type eq "COL") { 
+					$out.="<tr>".(map {"<td>$_</td>"} @list)."</tr>";
+				} elsif ($type eq "COL") { 
 #
 # ditto for a single column
 #
-				$out.=join("",map {"<tr><td>$_</td></tr>"} @list);
-			} else { 
+					$out.=join("",map {"<tr><td>$_</td></tr>"} @list);
+				} else { 
 #
 # For a 2D table, it's a bit more complicated...
 #
-				$out.= join("",map {"<tr>$_</tr>"} (map {join("",map {"<td>$_</td>"} @{$_})} @list));
-			}
-			$out.="</table>";
-		} else {
+					$out.= join("",map {"<tr>$_</tr>"} (map {join("",map {"<td>$_</td>"} @{$_})} @list));
+				}
+				$out.="</table>";
+			} else {
 # if no header row or list, then just say none.
-			$out.="(none)";
+				$out.="(none)";
+			}
+			return $out;
 		}
-		return $out;
-	}
 
 
