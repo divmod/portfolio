@@ -1044,14 +1044,38 @@ sub UserTable {
 #IKH - 
 sub PortfoliosTable {
   my @rows;
-  eval { @rows = ExecSQL($dbuser, $dbpasswd, "select name, cashamt, strategy from portfolio where username = '$user'"); };
+  my $out = "";
+  eval { @rows = ExecSQL($dbuser, $dbpasswd, "select name, cashamt, strategy, pid from portfolio where username = '$user'"); };
   if ($@) {
     return (undef,$@);
   } else {
-    return (MakeTable("2D",
-                     ["Name", "Cash", "Strategy"],
-                     @rows),$@);
+    $out.="<table border><tr><td>NAME</td><td>CASH</td><td>STRATEGY</td><td>VALUE</td></tr>";
+
+    foreach my $row (@rows) {
+       my ($name, $cash, $strategy, $pid) = @{$row};
+       my ($strategyname, $portfoliosum)=("",0);
+       if ($strategy eq "b") {
+	  my @holdingrows;
+	  $strategyname = "buy n hold";
+          eval { @holdingrows = ExecSQL($dbuser, $dbpasswd, "select datestamp, symbol, invest from holdings where id = '$pid'"); };
+          if ($@) {
+	    return (undef,$@);
+          } else {
+	    foreach my $holdingrow (@holdingrows) {
+		my ($date, $symbol, $invest) = @{$holdingrow};
+		$portfoliosum += './shannon_ratchet.pl $symbol $invest 0 $date';
+	    }	
+ 	 } 
+       } 
+       else {
+          $portfoliosum = "X";
+          $strategyname = "X";
+       }
+       $out.="<tr><td><$name</td><td><$cash</td><td>$strategyname</td><td>$portfoliosum</td></tr>";
   }
+  $out.="</table>";
+  return $out;
+ }
 }
 
 
