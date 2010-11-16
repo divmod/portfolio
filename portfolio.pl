@@ -499,6 +499,8 @@ if($action eq "confirmBuy"){
 	}
 }
 
+#Begin Joy Code Section#
+
 
 #
 # MANAGE CASH
@@ -569,6 +571,8 @@ print "Username is: $user";
 		}
 	}
 }
+
+#end Joy Code section#
 
 
 ###################################################################
@@ -875,6 +879,8 @@ print "Username is: $user";
 
 	}
 
+#begin Joy Code Section#
+
 #
 # GetPortfolioNames
 #
@@ -894,6 +900,7 @@ print "Username is: $user";
 		}
 	}
 
+#end Joy Code Section#
 
 #get closing price of the stock on based on the date
 	sub StockExistsOnDate{
