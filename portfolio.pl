@@ -1044,7 +1044,7 @@ sub UserTable {
 #IKH - 
 sub PortfoliosTable {
   my @rows;
-  eval { @rows = ExecSQL($dbuser, $dbpasswd, "select name, cashamt, strategy from portfolios where username = $user"); };
+  eval { @rows = ExecSQL($dbuser, $dbpasswd, "select name, cashamt, strategy from portfolio where username = $user"); };
   if ($@) {
     return (undef,$@);
   } else {
