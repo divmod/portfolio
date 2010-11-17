@@ -39,6 +39,7 @@ if (param('postrun')) {
 	my $symbol = param('symbol');
 	my $period = param('period');
 	my $enddate = param('todate').' 05:00:00 GMT';
+
 	my $fromdate;
 	my $todate = parsedate($enddate);
 
@@ -62,7 +63,6 @@ if (param('postrun')) {
 	}
 
 	my @results =	`./get_data.pl --from='$fromdate' --to='$todate' --close --plot $symbol`;
-
 	print @results;
 
 #	`./get_data.pl --close $symbol --plot`;
@@ -113,5 +113,4 @@ sub GnuPlot
 	close(GNUPLOT);
 	return $outputfile;
 }
-
 

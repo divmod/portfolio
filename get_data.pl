@@ -36,6 +36,7 @@ $plot=0;
 #if (defined $from) { $from=$from; }
 #if (defined $to) { $to=$to; }
 
+
 $#ARGV==0 or die "usage: get_data.pl [--open] [--high] [--low] [--close] [--vol] [--from=date] [--too=date] [--plot] SYMBOL\n";
 
 $symbol=shift;
@@ -55,7 +56,7 @@ $sql.= " and date>=$from" if $from;
 $sql.= " and date<=$to" if $to;
 $sql.= " order by date";
 
-print STDERR $sql,"\n";
+#print STDERR $sql,"\n";
 
 $exec = "mysql --batch --silent --user=$user --password=$pass --database=$db --execute=\"$sql\"";
 
