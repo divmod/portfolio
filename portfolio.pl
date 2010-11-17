@@ -53,14 +53,14 @@ use POSIX;
 # The following is necessary so that DBD::Oracle can
 # find its 
 #
-$env{oracle_home}="/opt/oracle/product/12.2.0/db_1";
-$env{oracle_base}="/opt/oracle/product/11.2.0";
-$env{oracle_sid}="cs339";
+$ENV{ORACLE_HOME}="/opt/oracle/product/11.2.0/db_1";
+$ENV{ORACLE_BASE}="/opt/oracle/product/11.2.0";
+$ENV{ORACLE_SID}="CS339";
 # you need to override these for access to your database
 #
 
-my $dbuser="drp925";
-my $dbpasswd="o3d7f737e";
+#my $dbuser="drp925";
+#my $dbpasswd="o3d7f737e";
 #my $dbuser="jhb348";
 #my $dbpasswd="ob5e18c77";
 
