@@ -58,16 +58,15 @@ $ENV{ORACLE_BASE}="/opt/oracle/product/11.2.0";
 $ENV{ORACLE_SID}="CS339";
 # You need to override these for access to your database
 #
-<<<<<<< HEAD
+
 my $dbuser="drp925";
 my $dbpasswd="o3d7f737e";
 #my $dbuser="jhb348";
 #my $dbpasswd="ob5e18c77";
-=======
+
 my $dbuser="ikh831";
 my $dbpasswd="o29de7c3f";
 
->>>>>>> e317fb53e610a0c85df6a7d87a16a0e6bff95a69
 
 #
 # The session cookie will contain the user's name and password so that 
@@ -1359,7 +1358,6 @@ sub BuyNHold {
 # Generate a table of users and their permissions
 # ($table,$error) = UserPermTable()
 # $error false on success, error string on failure
-<<<<<<< HEAD
 #
 		sub UserPermTable {
 			my @rows;
@@ -1372,20 +1370,6 @@ sub BuyNHold {
 							@rows),$@);
 			}
 		}
-=======
-sub UserPermTable {
-  my @rows;
-  eval { @rows = ExecSQL($dbuser, $dbpasswd, "select blog_users.name, blog_permissions.action from blog_users, blog_permissions where blog_users.name=blog_permissions.name order by blog_users.name"); }; 
-  if ($@) { 
-    return (undef,$@);
-  } else {
-    return (MakeTable("2D",
-		     ["Name", "Permission"],
-		     @rows),$@);
-  }
-}
->>>>>>> e317fb53e610a0c85df6a7d87a16a0e6bff95a69
-
 #
 # Add a user
 # call with name,password,email
