@@ -37,7 +37,7 @@ use CGI qw(:standard);
 #
 #
 # This will also load DBD::Oracle which is the driver for
-# Oracle.
+# Oracle
 use DBI;
 
 #
@@ -47,10 +47,11 @@ use DBI;
 #
 use Time::ParseDate;
 
-
+#For ceiling function
+use POSIX;
 #
 # The following is necessary so that DBD::Oracle can
-# find its butt
+# find its 
 #
 $ENV{ORACLE_HOME}="/opt/oracle/product/11.2.0/db_1";
 $ENV{ORACLE_BASE}="/opt/oracle/product/11.2.0";
@@ -73,7 +74,7 @@ my $dbpasswd="o3d7f737e";
 # THIS IS FOR ILLUSTRATION PURPOSES.  IN REALITY YOU WOULD ENCRYPT THE COOKIE
 # AND CONSIDER SUPPORTING ONLY HTTPS
 #
-my $cookiename="MicroblogSession";
+my $cookiename="PortfolioSession";
 
 #
 # Get the session input cookie, if any
@@ -96,6 +97,7 @@ my $logincomplain=0;
 my $action;
 if (param("act")) { 
   $action=param("act");
+ # print h2($action);
 } else {
   $action="login";
 }
@@ -189,7 +191,7 @@ if ($outputcookiecontent) {
 # Now we finally begin spitting back HTML
 #
 #
-print start_html('Microblog');
+print start_html('Portfolio');
 
 
 if ($loginok) { 
@@ -220,11 +222,11 @@ if ($action eq "login") {
   if ($logincomplain or !param('loginrun')) { 
     print start_form(-name=>'Login'),
       h2('Login to Portfolio Manager'),
-	"Name:",textfield(-name=>'user'),	p,
-	  "Password:",password_field(-name=>'password'),p,
+	"Name: ",textfield(-name=>'user'),	p,
+	  "Password :",password_field(-name=>'password'),p,
 	    hidden(-name=>'act',default=>['login']),
 	      hidden(-name=>'loginrun',default=>['1']),
-		submit,
+		submit(-name=>'login'),
 		  end_form;
   }
 }
@@ -293,20 +295,329 @@ if ($action eq "logout") {
 #  }
 #}
 
+##############PORTFOLIO##################################
 if ($action eq "display") {
-  
+   #WriteStocksToFile();
     #
     # Generate the form
     # This is the part you will be extending
-    #
-    print start_form(-name=>'New Portfolio Name'),
+    #    
+    print h3('These are the portfolios you have');
+    #Query for portfolios and display the info
+    #To be done by Irene
     
-	"New Portfolio Name: ", textfield(-name=>'c',-default=>'myportfolio'),
-	submit,
-	end_form;
-    
-    print h2('There are the portfolios you have');
+    #Also give the option to create a new portfolio
+    print h3('<a href="portfolio.pl?act=create" target="output">Create New Portfolio</a>');
+ 
 }
+
+# CREATE
+# Allows a user to create a new portfolio
+if($action eq "create"){
+  print start_form(-name=>'Create'),
+	h2('Add Portfolio'),
+	"Portfolio Name:  ", textfield(-name=>'pname'),
+	p,
+	"Cash Amt:  ", textfield(-name=>'cashamt'),
+	p,
+	popup_menu(-name=>'strategy', -values=>['a', 'b'], -labels=>{'a' => 'buy n hold', 'b' => 'shannon rachet'}, -default=>'a'), 
+	p,
+	hidden(-name=>'postrun',-default=>['1']),
+	hidden(-name=>'act',-default=>['create']), 
+	submit(-name=>'Submit'),
+	reset(),
+	end_form;
+  if (param('postrun')) { 
+      #my $by=$user;
+      my $pname=param('pname');
+      my $cashamt=param('cashamt');
+      my $strategy=param('strategy');
+      #print $strategy;
+      my $s;
+      if($strategy eq "a"){
+	$s = "buy n hold";
+      }
+      elsif($strategy eq "b"){
+	$s = "shannon rachet";
+      }
+   
+      #print "came here\n";
+      my $error=AddPortfolio($user, $pname, $cashamt,$strategy);
+      if ($error) { 
+	print "Can't post message because: $error";
+      }
+      else {
+	print "<h3>Portfolio $pname with \$$cashamt and $s strategy was successfully created by $user</h3>";
+	my ($pid, $error)=LookUpPortfolio($user, $pname);
+	#print "pid= ".$pid;
+	if($error){
+	  print "Can't buy: $error";
+	}
+	else{
+	  print "<h3><a href=\"portfolio.pl?act=buy&pid=$pid\">Buy Stock</a></h3> ";
+	}
+      }
+  }
+	
+}#end Create
+
+#BUY
+# Buy Stock
+
+if($action eq "buy"){
+  #(Print) Cash Available : XXXX
+  #Enter Investment Amount: 
+  #Enter Date Purchased: [default is today]
+      my $pid = param('pid');
+      my ($iamt, $stock, $m, $d, $y, $pdate, $date);
+      my ($cashamt, $error1) = AvailableCashInPortfolio($pid);
+      if($error1){
+	print "Can't get available amt:$error1";
+      }
+	
+      my (@stocks, $error2) = GetStocks();
+      if($error2){
+	 print "Can't stocks:$error2";
+      }
+    
+     
+      print start_form(-name=>'Buy'),
+	    h2('Buy Stock'),
+	    p,
+	    "Select a Stock ",
+	    p,
+	    scrolling_list(-name=>'stock', -values=>[@stocks],-size=>10),
+	    p,
+	    "Available Cash: ".$cashamt,
+	    p,
+	    "Enter Investment Amount:  ", textfield(-name=>'iamt'),
+	    p
+	    "Enter Date Purchased:  ", textfield(-name=>'month',-size=>2), "/",textfield(-name=>'day',-size=>2),"/",textfield(-name=>'year',-size=>4),"(mm/dd/yyyy)",
+	    p,
+	    hidden(-name=>'postrun',-default=>['1']),
+	    hidden(-name=>'pid',-default=>[$pid]),
+	    hidden(-name=>'act',-default=>['buy']),
+	    submit(-name=>'Buy'), reset(),
+	    end_form;
+	    
+    
+      if (param('postrun')){
+	$iamt = param('iamt');
+	$stock = param('stock');
+	$m = param('month');
+	$d = param('day');
+	$y = param('year');
+	$pdate = $m."/".$d."/".$y." 05:00:00 GMT";
+	$date =  parsedate($pdate);
+	my($exists, $error3) = StockExistsOnDate($date, $stock);
+	if(!$exists){
+	    print h2('This stock does not exist for the date entered. Try Again.');
+	    #print "<h3><a href=\"portfolio.pl?act=buy&pid=$pid\">Try Again</a></h3>";
+	}
+	else{
+	   my $deduct = $cashamt - $iamt;
+	   if($deduct < 0){
+	      $iamt = $cashamt;
+	   }
+	  my ($closePrice, $error4) = GetClosingPrice($date, $stock);
+	  if($error4){
+	    print "Problem getting close price:$error4";
+	  }
+	  if($closePrice > $iamt){
+	    print "<h4>You have insufficient funds to buy stock $stock as the close strike price for one unit on".localtime($date)." is \$$closePrice</h4>";
+	    print "<h3><a href=\"portfolio.pl?act=cashManagement&pid=$pid\">Add Cash to Portfolio</a></h3>";
+	  }
+	  else{
+	    my $quantity = floor($iamt/$closePrice);
+	    #print "<h4>Quantity:".$quantity."</h4>";
+	    print "<h4>Stock Chosen:".$stock."</h4>";
+	    print "<h4>Close price on ".localtime($date)." is "."\$".$closePrice."</h4>";
+	    $iamt = $quantity * $closePrice;
+	    print "<h4>Investment Amount to be Deducted for ". $quantity." units : "."\$".$iamt."</h4>";
+	    print "<h3><a href=\"portfolio.pl?act=confirmBuy&pid=$pid&stock=$stock&date=$date&iamt=$iamt&quant=$quantity\">Confirm</a></h3>";
+	  }#end closePrice<= $iamt
+	}#end stock exists for date
+	
+      }#end postrun
+}#end action buy
+
+if($action eq "confirmBuy"){
+
+    my($iamt, $stock, $pid,$date, $quantity);
+    $iamt = param('iamt');
+    $stock = param('stock');
+    $date = param('date');
+    $pid = param('pid');
+    $quantity = param('quant');
+    print start_form(-name=>'ConfirmBuy'),
+      h2('Successful Purchase Summary'),
+      "Date of Purchase: ".localtime($date),
+      p,
+      "Stock Chosen: \$".$stock,
+      p,
+      "Investment Amount: \$".$iamt,
+      p,
+      "Quantity Purchased: ".$quantity,
+      p,      
+      hidden(-name=>'pid',-default=>[$pid]),
+      hidden(-name=>'iamt',-default=>[$iamt]),
+      hidden(-name=>'stock',-default=>[$stock]),
+      hidden(-name=>'date',-default=>[$date]),
+      hidden(-name=>'quant',-default=>[$quantity]),
+      hidden(-name=>'act',-default=>['confirmBuy']),
+      end_form;
+
+     #Make a new entry in the holdings table
+     my $error1 = AddToHoldings($pid, $date, $stock,$quantity, $iamt);
+     if ($error1) { 
+      print "Holding transaction not succsessful: $error1";
+    }
+    
+    my ($amt, $error2) = AvailableCashInPortfolio($pid);
+    if ($error2) { 
+      print "Problem Retriving Cash Amount: $error2";
+    }
+   
+    #Update the cash amt in the portfolio
+    my $newamt = $amt - $iamt;
+    my $error3 = ManageCash($pid, $newamt);
+     if ($error3) { 
+      print "Portfolio cash not properly debited: $error3";
+    }
+     
+    #Remove this when things are integrated
+    print "<h3><a href=\"portfolio.pl?act=sell&pid=$pid&stock=$stock&bdate=$date\">Sell</a></h3>";
+}#end confirmBuy
+
+if($action eq "sell"){
+  #Quantity: XX
+  #Enter Date Sold:
+  #Enter Quantity to be sold: 
+
+    my $pid = param('pid');
+    my $stock = param('stock');
+    my $bdate = param('bdate');
+    my ($m, $d, $y, $sdate, $qsell);
+    my (@data, $error1) = GetAHolding($pid, $bdate, $stock);
+    if($error1){
+        print "Problem getting holding info:$error1";
+    }
+    my $quant = $data[0];
+    my $iinvest = $data[1];
+    #print "stock:".$stock."bdate: ".$bdate."quant: ".$quant." iinvest:".$iinvest; 
+    print start_form(-name=>'Sell'),
+	h2('Sell Stock'),
+	p,
+	"Enter Date Sold:  ", textfield(-name=>'month',-size=>2), "/",textfield(-name=>'day',-size=>2),"/",textfield(-name=>'year',-size=>4),"(mm/dd/yyyy)",
+	p,
+	"Enter Quantity to be Sold: ", textfield(-name=>'qsell',-size=>3),
+	p
+	hidden(-name=>'postrun',-default=>['1']),
+	hidden(-name=>'pid',-default=>[$pid]),
+	hidden(-name=>'bdate',-default=>[$bdate]),
+	hidden(-name=>'stock',-default=>[$stock]),
+	hidden(-name=>'act',-default=>['sell']),
+	p,
+	submit(-name=>'sell'), reset(),
+	end_form;
+	
+    if(param('postrun')){
+      $qsell = param('qsell');
+      $m = param('month');
+      $d = param('day');
+      $y = param('year');
+      $d = $m."/".$d."/".$y." 05:00:00 GMT";
+      $sdate =  parsedate($d);
+      #print $sdate;
+      my($exists, $error2) = StockExistsOnDate($sdate, $stock);
+      if(!$exists){
+	print h2('This stock does not exist for the date entered. Try Again!'); 
+      }
+      elsif($sdate < $bdate){
+	print h2('Cannot sell on date which is prior to purchase date to the stock. Try Again!');
+      }
+      elsif($quant - $qsell < 0){
+	print h2('Cannot sell more than what you own. Try Again!');
+      }
+      else{
+	my $diff = $quant - $qsell;
+	print "You want to sell ".$qsell." units of ". $stock. " stock on ".localtime($sdate);
+	print "<h3><a href=\"portfolio.pl?act=sellConfirm&pid=$pid&stock=$stock&bdate=$bdate&sdate=$sdate&qsell=$qsell&diff=$diff\">Confirm</a></h3>";
+	#Note put a cancel link that goes back to the portfolio.
+      }   
+    }#end postrun
+}#end action sell
+
+if($action eq "sellConfirm"){
+	  
+    my $pid = param('pid');
+    my $stock = param('stock');
+    my $bdate = param('bdate');
+    my $sdate = param('sdate');
+    my $qsell = param('qsell');
+    my $diff = param('diff');
+    my ($profitOrLoss, $cashback, $investUpdate, $cash);
+    
+    #########Update portfolio Cash
+    #get closingPrice on sell date
+    my ($closePriceS, $error1) = GetClosingPrice($sdate, $stock);
+    if($error1){
+      print "Problem getting close sell price:$error1";
+    } 
+    $cashback = $qsell * $closePriceS;
+    my ($cash, $error2) = AvailableCashInPortfolio($pid);
+    if($error2){
+      print "Problem getting current cash of portfolio: $error2";
+    }
+    
+    $cash += $cashback;
+    my($error3) = ManageCash($pid, $cash);
+    if($error3){
+      print "Problem updating cash in portfolio:$error3";
+    }
+    
+    ###calculate profit or loss
+    my ($closePriceB, $error5) = GetClosingPrice($bdate, $stock);
+    if($error5){
+	print "Problem getting close buy price:$error5";
+    }
+    $profitOrLoss = ($closePriceS - $closePriceB)*$qsell;
+    
+    ###Check whether to delete the holding or update the holding
+    if($diff == 0){
+      #Delete holding
+      my $error4 = DeleteAHolding($pid,$bdate,$stock);
+      if($error4){
+	print "Problem deleting a holding:$error4";
+      }
+    }
+    elsif($diff > 0){
+      #update holding
+       $investUpdate = $diff * $closePriceB;
+       my ($error6) = UpdateAHolding($pid, $bdate, $stock, $diff, $investUpdate);
+       if($error6){
+	  print "Problem updating a holding:$error6";
+       }
+    }#end diff > 0
+    
+     print start_form(-name=>'Sell Summary'),
+	h2('Sell Summary'),
+	p,
+	"Sold ".$qsell." units of stock ". $stock. " on ".localtime($sdate),
+	p,
+	"Cash Received: ".$cashback,
+	p,
+	"Profit(+)/Loss(-): ".$profitOrLoss,
+	hidden(-name=>'pid',-default=>[$pid]),
+	hidden(-name=>'stock',-default=>[$stock]),
+	hidden(-name=>'bdate',-default=>[$bdate]),
+	hidden(-name=>'sdate',-default=>[$sdate]),
+	hidden(-name=>'qsell',-default=>[$qsell]),
+	hidden(-name=>'diff',-default=>[$diff]),
+	hidden(-name=>'act',-default=>['sellConfirm']),
+	end_form;
+}#end sell confirm 
+###################################################################
 
 # WRITE
 #
@@ -333,7 +644,7 @@ if ($action eq "write") {
 		   -rows=>16,
 		   -columns=>80),
           hidden(-name=>'postrun',-default=>['1']),
-	  hidden(-name=>'act',-default=>['write']), p
+	  hidden(-name=>'act',-default=>['write']), 
 	  submit,
 	  end_form,
 	  hr;
@@ -342,7 +653,7 @@ if ($action eq "write") {
     # If we're being invoked with parameters, then
     # do the actual posting. 
     #
-    if (param('postrun')) { 
+    if (param('postrun')){ 
       my $by=$user;
       my $text=param('post');
       my $subject=param('subject');
@@ -542,7 +853,319 @@ print end_html;
 # The remainder includes utilty and other functions
 #
 
+#############Portfolio functionality##########
+#Insert a row in Portfolio table
+sub AddPortfolio {
+  my ($username,$pname, $cashamt, $strategy)=@_;
+  #INSERT INTO Portfolio(pid, username, name, cashamt, strategy) VALUES(pid.nextval,'root','myportfolio', 10000.00, 'b');
+  eval { ExecSQL($dbuser,$dbpasswd,"insert into Portfolio(pid, username, name, cashamt, strategy) ".
+		 "select pid.nextval, ?, ?, ?, ? from dual",
+		undef, $username, $pname, $cashamt, $strategy); };
+  return $@;
+}
 
+#get the pid of Portfolio based on username and name
+sub LookUpPortfolio{
+  my($username, $pname) = @_;
+  my @col;
+  #SELECT pid from Portfolio where username=1038 and name = 'myportfolio';
+  eval {@col=ExecSQL($dbuser,$dbpasswd,"select pid from Portfolio where username=? and name =?","COL",$username, $pname);};
+  if ($@) {
+      return (undef,$@);
+  }
+  else {
+    return ($col[0],$@);
+  }
+}
+
+#get the available cash in Portfolio based on pid
+sub AvailableCashInPortfolio{
+  my($pid) = @_;
+  my @col;
+  #SELECT cashamt from Portfolio where pid='1038';
+  eval {@col=ExecSQL($dbuser,$dbpasswd,"select cashamt from Portfolio where pid=?","COL",$pid);};
+  if ($@) {
+      return (undef,$@);
+  }
+  else {
+    return ($col[0],$@);
+  }
+}
+
+#testing mysql
+sub MysqlTest{
+  #my($sym) = @_;
+  my @col;
+  eval {@col=ExecMySQL("select count(*) from symbols","COL");};
+  if ($@) {
+      return (undef,$@);
+  }
+  else {
+    return ($col[0],$@);
+  }
+}
+
+#list of stocks based on search
+
+sub GetStocks{
+  #my $search = @_;
+  #$search = "^".$search;
+  my @cols;
+  #eval {@rows=ExecMySQL("select symbol from symbols where symbol regexp ?","ROW", $search);};
+  #my $r = "^C";
+  #eval {@cols=ExecMySQL("select symbol from symbols where symbol regexp ?","COL", $r);};
+  eval {@cols=ExecMySQL("select symbol from symbols","COL");};
+  if ($@) {
+      return (undef,$@);
+  }
+  else {
+    return (@cols,$@);
+  }
+  
+}
+#get closing price of the stock on based on the date
+sub StockExistsOnDate{
+   my($date, $sym) = @_;
+   my @col;
+  #select count(*) from StocksDaily where date=1151470800 and symbol='GOOG'; 
+  eval {@col=ExecMySQL("select count(*) from StocksDaily where date=? and symbol=?","COL",$date,$sym);};
+  if ($@) {
+      return (undef,$@);
+  }
+  else {
+    return ($col[0]>0,$@);
+  }
+}
+
+#get closing price of the stock on based on the date
+sub GetClosingPrice{
+   my($date, $sym) = @_;
+   my @col;
+  #select close from StocksDaily where date=1151470800 and symbol='GOOG'; 
+  eval {@col=ExecMySQL("select close from StocksDaily where date=? and symbol=?","COL",$date,$sym);};
+  if ($@) {
+      return (undef,$@);
+  }
+  else {
+    return ($col[0],$@);
+  }
+}
+
+# insert a row into holdings.
+sub AddToHoldings{
+  
+  #insert into Holdings(id, datestamp, symbol, quantity, iinvest) values(2081, 1151470800 , 'GOOG', 10, 500);
+  my ($pid,$date, $sym, $quant, $iinvest)=@_;
+  eval { ExecSQL($dbuser,$dbpasswd,"insert into Holdings(id, datestamp, symbol, quantity, iinvest) values(?, ?, ?, ?, ?)",undef, $pid, $date, $sym, $quant, $iinvest); };
+  return $@;
+}
+
+# update the cashamt
+sub ManageCash{
+  my ($pid, $amt) = @_;
+  #update Portfolio set cashamt=7000 where pid=1035;
+  eval{ExecSQL($dbuser,$dbpasswd,"update Portfolio set cashamt=? where pid=?", undef, $amt, $pid);};
+  return @;
+
+}
+
+#get a row in holdings based on pid, stock, and date and return $quantity and $iinvest
+sub GetAHolding{
+ 
+  my ($pid,$date,$sym)=@_;
+  my @row;
+  eval { @row=ExecSQL($dbuser,$dbpasswd,"select quantity, iinvest from Holdings where id =? and datestamp =? and symbol=?",'ROW', $pid, $date, $sym); };
+  if($@){
+    return (undef, $@);
+  }
+  else{
+    return (@row, $@);
+  }
+}
+
+#update a row in holdings based on pid, stock, sym with $quantity and $iinvest
+sub UpdateAHolding{
+   my ($pid,$date,$sym,$quantity,$iinvest)=@_;
+   eval{ExecSQL($dbuser,$dbpasswd,"update Holdings set quantity=?, iinvest = ? where id=? and datestamp=? and symbol=?", undef, $quantity, $iinvest, $pid, $date, $sym);};
+  return @;
+}
+
+#delete a row in holdings based on pid, stock, sym
+sub DeleteAHolding{
+   my ($pid,$date,$sym)=@_;
+   eval{ExecSQL($dbuser,$dbpasswd,"delete from Holdings where id=? and datestamp=? and symbol=?", undef, $pid, $date, $sym);};
+  return @;
+}
+
+sub WriteStocksToFile{
+  
+  my (@stocks, $error2) = GetStocks();
+  if($error2){
+    print "Can't stocks:$error2";
+  }
+  open (MYFILE, '>>stocksC.txt');
+  foreach my $s (@stocks){
+    print MYFILE $s." ";
+  }
+      
+}
+#
+# @list=ExecMySQL($querystring, $type, @fill);
+#
+# Executes a MySQL statement.  If $type is "ROW", returns first row in list
+# if $type is "COL" returns first column.  Otherwise, returns
+# the whole result table as a list of references to row lists.
+# @fill are the fillers for positional parameters in $querystring
+#
+# ExecSQL executes "die" on failure.
+#
+sub ExecMySQL {
+  my ($querystring, $type, @fill) =@_;
+  my $user = "cs339";
+  my $passwd = "cs339";
+  my $db = "cs339";
+  if ($show_sqlinput) { 
+    # if we are recording inputs, just push the query string and fill list onto the 
+    # global sqlinput list
+    push @sqlinput, "$querystring (".join(",",map {"'$_'"} @fill).")";
+  }
+  my $dbh = DBI->connect("DBI:mysql:$db",$user,$passwd);
+  if (not $dbh) { 
+    # if the connect failed, record the reason to the sqloutput list (if set)
+    # and then die.
+    if ($show_sqloutput) { 
+      push @sqloutput, "<b>ERROR: Can't connect to the database because of ".$DBI::errstr."</b>";
+    }
+    die "Can't connect to database because of ".$DBI::errstr;
+  }
+  my $sth = $dbh->prepare($querystring);
+  if (not $sth) { 
+    #
+    # If prepare failed, then record reason to sqloutput and then die
+    #
+    if ($show_sqloutput) { 
+      push @sqloutput, "<b>ERROR: Can't prepare '$querystring' because of ".$DBI::errstr."</b>";
+    }
+    my $errstr="Can't prepare $querystring because of ".$DBI::errstr;
+    $dbh->disconnect();
+    die $errstr;
+  }
+  if (not $sth->execute(@fill)) { 
+    #
+    # if exec failed, record to sqlout and die.
+    if ($show_sqloutput) { 
+      push @sqloutput, "<b>ERROR: Can't execute '$querystring' with fill (".join(",",map {"'$_'"} @fill).") because of ".$DBI::errstr."</b>";
+    }
+    my $errstr="Can't execute $querystring with fill (".join(",",map {"'$_'"} @fill).") because of ".$DBI::errstr;
+    $dbh->disconnect();
+    die $errstr;
+  }
+  #
+  # The rest assumes that the data will be forthcoming.
+  #
+  #
+  my @data;
+  if (defined $type and $type eq "ROW") { 
+    @data=$sth->fetchrow_array();
+    $sth->finish();
+    if ($show_sqloutput) {push @sqloutput, MakeTable("ROW",undef,@data);}
+    $dbh->disconnect();
+    return @data;
+  }
+  my @ret;
+  while (@data=$sth->fetchrow_array()) {
+    push @ret, [@data];
+  }
+  if (defined $type and $type eq "COL") { 
+    @data = map {$_->[0]} @ret;
+    $sth->finish();
+    if ($show_sqloutput) {push @sqloutput, MakeTable("COL",undef,@data);}
+    $dbh->disconnect();
+    return @data;
+  }
+  $sth->finish();
+  if ($show_sqloutput) {push @sqloutput, MakeTable("2D",undef,@ret);}
+  $dbh->disconnect();
+  return @ret;
+}
+
+#
+# @list=ExecSQL($user, $password, $querystring, $type, @fill);
+#
+# Executes a SQL statement.  If $type is "ROW", returns first row in list
+# if $type is "COL" returns first column.  Otherwise, returns
+# the whole result table as a list of references to row lists.
+# @fill are the fillers for positional parameters in $querystring
+#
+# ExecSQL executes "die" on failure.
+#
+sub ExecSQL {
+  my ($user, $passwd, $querystring, $type, @fill) =@_;
+  if ($show_sqlinput) { 
+    # if we are recording inputs, just push the query string and fill list onto the 
+    # global sqlinput list
+    push @sqlinput, "$querystring (".join(",",map {"'$_'"} @fill).")";
+  }
+  my $dbh = DBI->connect("DBI:Oracle:",$user,$passwd);
+  if (not $dbh) { 
+    # if the connect failed, record the reason to the sqloutput list (if set)
+    # and then die.
+    if ($show_sqloutput) { 
+      push @sqloutput, "<b>ERROR: Can't connect to the database because of ".$DBI::errstr."</b>";
+    }
+    die "Can't connect to database because of ".$DBI::errstr;
+  }
+  my $sth = $dbh->prepare($querystring);
+  if (not $sth) { 
+    #
+    # If prepare failed, then record reason to sqloutput and then die
+    #
+    if ($show_sqloutput) { 
+      push @sqloutput, "<b>ERROR: Can't prepare '$querystring' because of ".$DBI::errstr."</b>";
+    }
+    my $errstr="Can't prepare $querystring because of ".$DBI::errstr;
+    $dbh->disconnect();
+    die $errstr;
+  }
+  if (not $sth->execute(@fill)) { 
+    #
+    # if exec failed, record to sqlout and die.
+    if ($show_sqloutput) { 
+      push @sqloutput, "<b>ERROR: Can't execute '$querystring' with fill (".join(",",map {"'$_'"} @fill).") because of ".$DBI::errstr."</b>";
+    }
+    my $errstr="Can't execute $querystring with fill (".join(",",map {"'$_'"} @fill).") because of ".$DBI::errstr;
+    $dbh->disconnect();
+    die $errstr;
+  }
+  #
+  # The rest assumes that the data will be forthcoming.
+  #
+  #
+  my @data;
+  if (defined $type and $type eq "ROW") { 
+    @data=$sth->fetchrow_array();
+    $sth->finish();
+    if ($show_sqloutput) {push @sqloutput, MakeTable("ROW",undef,@data);}
+    $dbh->disconnect();
+    return @data;
+  }
+  my @ret;
+  while (@data=$sth->fetchrow_array()) {
+    push @ret, [@data];
+  }
+  if (defined $type and $type eq "COL") { 
+    @data = map {$_->[0]} @ret;
+    $sth->finish();
+    if ($show_sqloutput) {push @sqloutput, MakeTable("COL",undef,@data);}
+    $dbh->disconnect();
+    return @data;
+  }
+  $sth->finish();
+  if ($show_sqloutput) {push @sqloutput, MakeTable("2D",undef,@ret);}
+  $dbh->disconnect();
+  return @ret;
+}
+##############################################
 #
 # Generate a table of available permissions
 # ($table,$error) = PermTable()
@@ -605,6 +1228,7 @@ sub UserPermTable {
 sub UserAdd { 
   eval { ExecSQL($dbuser,$dbpasswd,
 		 "insert into blog_users (name,password,email) values (?,?,?)",undef,@_);};
+  
   return $@;
 }
 
@@ -752,8 +1376,8 @@ sub MessageQuery {
   } else {
     my $msg;
     my $out="";
-    my $out.="<h3>Messages from $timefrom to $timeto by '$by'<h3>";
-    if ($#msgs<0) { 
+    $out.="<h3>Messages from $timefrom to $timeto by '$by'<h3>";
+    if ($msg<0) { 
       $out.="There are no messages";
     }
     foreach $msg (@msgs) { 
@@ -826,80 +1450,4 @@ sub MakeTable {
   return $out;
 }
 
-#
-# @list=ExecSQL($user, $password, $querystring, $type, @fill);
-#
-# Executes a SQL statement.  If $type is "ROW", returns first row in list
-# if $type is "COL" returns first column.  Otherwise, returns
-# the whole result table as a list of references to row lists.
-# @fill are the fillers for positional parameters in $querystring
-#
-# ExecSQL executes "die" on failure.
-#
-sub ExecSQL {
-  my ($user, $passwd, $querystring, $type, @fill) =@_;
-  if ($show_sqlinput) { 
-    # if we are recording inputs, just push the query string and fill list onto the 
-    # global sqlinput list
-    push @sqlinput, "$querystring (".join(",",map {"'$_'"} @fill).")";
-  }
-  my $dbh = DBI->connect("DBI:Oracle:",$user,$passwd);
-  if (not $dbh) { 
-    # if the connect failed, record the reason to the sqloutput list (if set)
-    # and then die.
-    if ($show_sqloutput) { 
-      push @sqloutput, "<b>ERROR: Can't connect to the database because of ".$DBI::errstr."</b>";
-    }
-    die "Can't connect to database because of ".$DBI::errstr;
-  }
-  my $sth = $dbh->prepare($querystring);
-  if (not $sth) { 
-    #
-    # If prepare failed, then record reason to sqloutput and then die
-    #
-    if ($show_sqloutput) { 
-      push @sqloutput, "<b>ERROR: Can't prepare '$querystring' because of ".$DBI::errstr."</b>";
-    }
-    my $errstr="Can't prepare $querystring because of ".$DBI::errstr;
-    $dbh->disconnect();
-    die $errstr;
-  }
-  if (not $sth->execute(@fill)) { 
-    #
-    # if exec failed, record to sqlout and die.
-    if ($show_sqloutput) { 
-      push @sqloutput, "<b>ERROR: Can't execute '$querystring' with fill (".join(",",map {"'$_'"} @fill).") because of ".$DBI::errstr."</b>";
-    }
-    my $errstr="Can't execute $querystring with fill (".join(",",map {"'$_'"} @fill).") because of ".$DBI::errstr;
-    $dbh->disconnect();
-    die $errstr;
-  }
-  #
-  # The rest assumes that the data will be forthcoming.
-  #
-  #
-  my @data;
-  if (defined $type and $type eq "ROW") { 
-    @data=$sth->fetchrow_array();
-    $sth->finish();
-    if ($show_sqloutput) {push @sqloutput, MakeTable("ROW",undef,@data);}
-    $dbh->disconnect();
-    return @data;
-  }
-  my @ret;
-  while (@data=$sth->fetchrow_array()) {
-    push @ret, [@data];
-  }
-  if (defined $type and $type eq "COL") { 
-    @data = map {$_->[0]} @ret;
-    $sth->finish();
-    if ($show_sqloutput) {push @sqloutput, MakeTable("COL",undef,@data);}
-    $dbh->disconnect();
-    return @data;
-  }
-  $sth->finish();
-  if ($show_sqloutput) {push @sqloutput, MakeTable("2D",undef,@ret);}
-  $dbh->disconnect();
-  return @ret;
-}
 
