@@ -56,8 +56,3 @@ if (param('postrun')) {
 
 }
 
-
-<<<<<<< HEAD
-=======
-
->>>>>>> e317fb53e610a0c85df6a7d87a16a0e6bff95a69
