@@ -20,7 +20,6 @@ $vol=0;
 $from=0;
 $to=0;
 $plot=0;
-$count=0;
 
 &GetOptions( "nodate"=>\$nodate,
              "open" => \$open,
@@ -30,14 +29,12 @@ $count=0;
 	     "vol" => \$vol,
 	     "from=s" => \$from,
 	     "to=s" => \$to,
-	     "plot" => \$plot,
-			 "count=s" => \$count);
+	     "plot" => \$plot);
 
 #if (defined $from) { $from=parsedate($from); }
 #if (defined $to) { $to=parsedate($to); }
 #if (defined $from) { $from=$from; }
 #if (defined $to) { $to=$to; }
-if (defined $count) { $count=$count; }
 
 $#ARGV>=0 or die "usage: get_data_multi.pl [--open] [--high] [--low] [--close] [--vol] [--from=date] [--too=date] [--plot] SYMBOL+\n";
 
@@ -93,7 +90,7 @@ print STDERR $sql,"\n";
 
 $exec = "mysql --batch --silent --user=$user --password=$pass --database=$db --execute=\"$sql\"";
 
-$exec .= ">_plot$count.in" if $plot;
+$exec .= ">_plot.in" if $plot;
 
 system $exec;
 
