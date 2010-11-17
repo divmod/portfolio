@@ -39,34 +39,29 @@ if (param('postrun')) {
 	my $symbol = param('symbol');
 	my $period = param('period');
 	my $enddate = param('todate').' 05:00:00 GMT';
-	my ($startdate, $calcdate);
+	my $fromdate;
+	my $todate = parsedate($enddate);
 
 	if ($period eq 'Day') {
-		$calcdate = parsedate($enddate) - (24 * 60 * 60);
-		$startdate = strftime("%m/%d/%Y", localtime($calcdate));
+		$fromdate = parsedate($enddate) - (24 * 60 * 60);
 	}
 	elsif ($period eq 'Week') {
-		$calcdate = parsedate($enddate) - (7 * 24 * 60 * 60);
-		$startdate = strftime("%m/%d/%Y", localtime($calcdate));
+		$fromdate = parsedate($enddate) - (7 * 24 * 60 * 60);
 	}
 	elsif ($period eq 'Quarter') {
-		$calcdate = parsedate($enddate) - (90 * 24 * 60 * 60);
-		$startdate = strftime("%m/%d/%Y", localtime($calcdate));
+		$fromdate = parsedate($enddate) - (90 * 24 * 60 * 60);
 	}
 	elsif ($period eq 'Month') {
-		$calcdate = parsedate($enddate) - (30 * 24 * 60 * 60);
-		$startdate = strftime("%m/%d/%Y", localtime($calcdate));
+		$fromdate = parsedate($enddate) - (30 * 24 * 60 * 60);
 	}
 	elsif ($period eq 'Year') {
-		$calcdate = parsedate($enddate) - (365 * 24 * 60 * 60);
-		$startdate = strftime("%m/%d/%Y", localtime($calcdate));
+		$fromdate = parsedate($enddate) - (365 * 24 * 60 * 60);
 	}
 	elsif ($period eq '5 Years') {
-		$calcdate = parsedate($enddate) - (5 * 365 * 24 * 60 * 60) + 1;
-		$startdate = strftime("%m/%d/%Y", localtime($calcdate));
+		$fromdate = parsedate($enddate) - (5 * 365 * 24 * 60 * 60) + 1;
 	}
 
-	my @results =	`./get_data.pl --from='$startdate' --to='$enddate' --close --plot $symbol`;
+	my @results =	`./get_data.pl --from='$fromdate' --to='$todate' --close --plot $symbol`;
 
 	print @results;
 
