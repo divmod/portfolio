@@ -39,7 +39,7 @@ if (param('postrun')) {
 	my $symbol = param('symbol');
 	my $period = param('period');
 	my $enddate = param('todate').' 05:00:00 GMT';
-<<<<<<< HEAD
+
 	my $fromdate;
 	my $todate = parsedate($enddate);
 
@@ -63,37 +63,6 @@ if (param('postrun')) {
 	}
 
 	my @results =	`./get_data.pl --from='$fromdate' --to='$todate' --close --plot $symbol`;
-=======
-	my ($startdate, $calcdate);
-
-	if ($period eq 'Day') {
-		$calcdate = parsedate($enddate) - (24 * 60 * 60);
-		$startdate = strftime("%m/%d/%Y", localtime($calcdate));
-	}
-	elsif ($period eq 'Week') {
-		$calcdate = parsedate($enddate) - (7 * 24 * 60 * 60);
-		$startdate = strftime("%m/%d/%Y", localtime($calcdate));
-	}
-	elsif ($period eq 'Quarter') {
-		$calcdate = parsedate($enddate) - (90 * 24 * 60 * 60);
-		$startdate = strftime("%m/%d/%Y", localtime($calcdate));
-	}
-	elsif ($period eq 'Month') {
-		$calcdate = parsedate($enddate) - (30 * 24 * 60 * 60);
-		$startdate = strftime("%m/%d/%Y", localtime($calcdate));
-	}
-	elsif ($period eq 'Year') {
-		$calcdate = parsedate($enddate) - (365 * 24 * 60 * 60);
-		$startdate = strftime("%m/%d/%Y", localtime($calcdate));
-	}
-	elsif ($period eq '5 Years') {
-		$calcdate = parsedate($enddate) - (5 * 365 * 24 * 60 * 60) + 1;
-		$startdate = strftime("%m/%d/%Y", localtime($calcdate));
-	}
-
-	my @results =	`./get_data.pl --from='$startdate' --to='$enddate' --close --plot $symbol`;
->>>>>>> e317fb53e610a0c85df6a7d87a16a0e6bff95a69
-
 	print @results;
 
 #	`./get_data.pl --close $symbol --plot`;
@@ -145,8 +114,3 @@ sub GnuPlot
 	return $outputfile;
 }
 
-
-<<<<<<< HEAD
-=======
-
->>>>>>> e317fb53e610a0c85df6a7d87a16a0e6bff95a69
