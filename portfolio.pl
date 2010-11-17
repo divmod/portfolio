@@ -301,28 +301,7 @@ if ($action eq "logout") {
 
 ##############PORTFOLIO##################################
 if ($action eq "display") {
-<<<<<<< HEAD
-
 #
-# Generate the form
-# This is the part you will be extending
-#    
-	print h3('These are the portfolios you have');
-#Query for portfolios and display the info
-#To be done by Irene
-
-#Also give the option to create a new portfolio
-	print h3('<a href="portfolio.pl?act=create" target="output">Create New Portfolio</a>');
-	my ($count, $error) = MysqlTest();
-	if($error){
-		print "Can't get count: $error";
-	}
-	else{
-		print "count= ".$count;
-	}
-=======
-  
-    #
     # Generate the form
     # This is the part you will be extending
     #   
@@ -348,7 +327,6 @@ if ($action eq "display") {
     else{
 	print "count= ".$count;
     }
->>>>>>> e317fb53e610a0c85df6a7d87a16a0e6bff95a69
 }
 
 if($action eq "portfoliosummary") {
@@ -365,7 +343,6 @@ if($action eq "portfoliosummary") {
 # CREATE
 # Allows a user to create a new portfolio
 if($action eq "create"){
-<<<<<<< HEAD
 	print start_form(-name=>'Create'),
 				h2('Add Portfolio'),
 				"Portfolio Name:  ", textfield(-name=>'pname'),
@@ -412,48 +389,6 @@ if($action eq "create"){
 				print "<h3><a href=\"portfolio.pl?act=buy&pid=$pid\">Buy Stock</a></h3>";
 			}
 		}
-=======
-  print start_form(-name=>'Create'),
-	h2('Add Portfolio'),
-	"Portfolio Name:  ", textfield(-name=>'pname'),
-	p,
-	"Cash Amt:  ", textfield(-name=>'cashamt'),
-	p,
-	popup_menu(-name=>'strategy', -values=>['a', 'b'], -labels=>{'a' => 'buy n hold', 'b' => 'shannon rachet'}, -default=>'a'), 
-	p,
-	hidden(-name=>'postrun',-default=>['1']),
-	hidden(-name=>'act',-default=>['create']), 
-	submit(-name=>'Submit'),
-	reset(),
-	end_form;
-  if (param('postrun')) { 
-      #my $by=$user;
-      my $pname=param('pname');
-      my $cashamt=param('cashamt');
-      my $strategy=param('strategy');
-      #print $strategy;
-      my $s;
-      if($strategy eq "a"){
-	$s = "buy n hold";
-      }
-      elsif($strategy eq "b"){
-	$s = "shannon rachet";
-      }
-      #print "came here\n";
-      my $error=AddPortfolio($user, $pname, $cashamt,$strategy);
-      if ($error) { 
-	print "Can't post message because: $error";
-      }
-      else {
-	print "<h3>Portfolio $pname with \$$cashamt and $s strategy was successfully created by $user</h3>";
-	my ($pid, $error)=LookUpPortfolio($user, $pname);
-	#print "pid= ".$pid;
-	if($error){
-	  print "Can't buy: $error";
-	}
-	else{
-	  print "<h3><a href=\"portfolio.pl?act=buy&pid=$pid\">Buy Stock</a></h3>";
->>>>>>> e317fb53e610a0c85df6a7d87a16a0e6bff95a69
 	}
 
 }#end Create
