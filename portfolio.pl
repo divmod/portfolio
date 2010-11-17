@@ -327,7 +327,8 @@ if ($action eq "display") {
 if($action eq "portfoliosummary") {
   my $pid = param('pid');
   my $strategy = param('strategy');
-  my ($table,$error) = StocksTable($pid,$strategy);
+  my $cash = param('cash');
+  my ($table,$error) = StocksTable($pid,$strategy,$cash);
   if ($error) {
      print "Can't display your stocks because: $error";
   } else {
@@ -343,7 +344,7 @@ if($action eq "create"){
 	p,
 	"Cash Amt:  ", textfield(-name=>'cashamt'),
 	p,
-	popup_menu(-name=>'strategy', -values=>['a', 'b', 'c'], -labels=>{'a' => 'buy n hold', 'b' => 'shannon rachet', 'c'=>'markov model'}, -default=>'a'), 
+	popup_menu(-name=>'strategy', -values=>['a', 'b'], -labels=>{'a' => 'buy n hold', 'b' => 'shannon rachet'}, -default=>'a'), 
 	p,
 	hidden(-name=>'postrun',-default=>['1']),
 	hidden(-name=>'act',-default=>['create']), 
@@ -362,9 +363,6 @@ if($action eq "create"){
       }
       elsif($strategy eq "b"){
 	$s = "shannon rachet";
-      }
-      elsif($strategy eq "c"){
-	$s = "markov model";
       }
       #print "came here\n";
       my $error=AddPortfolio($user, $pname, $cashamt,$strategy);
@@ -1063,7 +1061,7 @@ sub PortfoliosTable {
 
     foreach my $row (@rows) {
        my ($name, $cash, $strategy, $pid) = @{$row};
-       my ($strategyname, $portfoliosum)=("",0);
+       my ($strategyname, $portfoliosum)=("",$cash);
        my @holdingrows;
 
        eval { @holdingrows = ExecSQL($dbuser, $dbpasswd, "select datestamp, symbol, iinvest, quantity from holdings where id = '$pid'"); };
@@ -1076,19 +1074,21 @@ sub PortfoliosTable {
 
            if($strategy eq "a"){
              $strategyname = "buy n hold";
-             $portfoliosum += './shannon_ratchet.pl $symbol $invest 0 $date';
+             my ($stocksum,$error) = BuyNHold($symbol,$quantity);
+             if ($error) {
+               print "Can't display portfolio value  because: $error";
+             } else {
+               $portfoliosum += $stocksum;
+             }
            }
 
            elsif ($strategy eq "b") {
-	     $portfoliosum += './shannon_ratchet.pl $symbol $invest 0 $date';
+	     $portfoliosum += `./shannon_ratchet.pl '$symbol' $invest 0 '$date'`;
              $strategyname = "shannon ratchet";
-           }
-           elsif($strategy eq "c"){
-             $strategyname = "markov model";
            }
          } 
        } 
-       $out.="<tr><td><a href = \"portfolio.pl?act=portfoliosummary&pid=$pid&strategy=$strategy\">$name</a></td><td>$cash</td><td>$strategyname</td><td>$portfoliosum</td></tr>";
+       $out.="<tr><td><a href = \"portfolio.pl?act=portfoliosummary&pid=$pid&strategy=$strategy&cash=$cash\">$name</a></td><td>$cash</td><td>$strategyname</td><td>$portfoliosum</td></tr>";
     }
     $out.="</table>";
     return $out;
@@ -1097,7 +1097,7 @@ sub PortfoliosTable {
 
 
 sub StocksTable {
-  my($pid, $strategy) = @_;
+  my($pid, $strategy, $cash) = @_;
   my @rows;
   my $out = "";
   eval { @rows = ExecSQL($dbuser, $dbpasswd, "select datestamp, symbol, iinvest, quantity from holdings where id = '$pid'"); };
@@ -1105,31 +1105,51 @@ sub StocksTable {
     return (undef,$@);
   } else {
     $out.="<table border><tr><td>STOCK</td><td>DATE PURCHASED</td><td>INITIAL INVESTMENT</td><td>INITIAL QUANTITY</td><td>CURRENT VALUE</td></tr>";
-
+    my $portfoliosum = $cash;
     foreach my $row (@rows) {
        my ($date, $symbol, $invest, $quantity) = @{$row};
        my $stocksum = 0;
-           if($strategy eq "a"){
-             $stocksum = './shannon_ratchet.pl $symbol $invest 0 $date';
-           }
-
-           elsif ($strategy eq "b") {
-	     $stocksum = './shannon_ratchet.pl $symbol $invest 0 $date';
-           }
-           elsif($strategy eq "c"){
-           }
-       $out.="<tr><td><a href = \"uploadandplot.pl?symbol=$symbol&pid=$pid\">$symbol</a></td><td>$date</td><td>$invest</td><td>$quantity</td><td>$stocksum</td></tr>";
+       my $error;
+       if($strategy eq "a"){
+          ($stocksum,$error) = BuyNHold($symbol,$quantity);
+          if ($error) { 
+             print "Can't display portfolio value  because: $error";
+          } else {
+             $portfoliosum += $stocksum;
+          }
+       }
+       elsif ($strategy eq "b") {
+	    $stocksum = `./shannon_ratchet.pl '$symbol' $invest 0 '$date'`;
+            $portfoliosum += $stocksum;
+       }
+ 
+       my $idate = strftime("%m/%d/%Y", localtime($date));
+       $out.="<tr><td>$symbol</td><td>$idate</td><td>$invest</td><td>$quantity</td><td>$stocksum</td><td><a href = \"historicinfo.pl?symbol=$symbol\">Historic Data</a></td>";
+       $out.="<td><a href = \"statistics.pl?symbol=$symbol\">Statistical Analysis</a></td>";
+       $out.="<td><a href = \"portfolio.pl?act=sell&pid=$pid&stock=$symbol&bdate=$date\">Sell</a></td></tr>";
     }
-    $out.="</table>";
+    
+    $out.="<tr><td>CASH</td><td></td><td></td><td></td><td>$cash</td>";
+    $out.="<tr><td></td><td></td><td></td><td>TOTAL PORTFOLIO VALUE:</td><td>$portfoliosum</td></table>";
     $out.="<h3><a href=\"portfolio.pl?act=buy&pid=$pid\">Buy Stock</a></h3>";
+    $out.="<h3><a href=\"p_statistics.pl?pid=$pid\">Analyze This Portfolio</a></h3>";
+    $out.="<h3><a href=\"p_historicinfo.pl?pid=$pid\">Past Performance of This Portfolio</a></h3>";
     return $out;
   }
 }
 #
+sub BuyNHold {
+  my ($symbol,$quantity)=@_;
+  my @stockValue;
+  eval { @stockValue = ExecMySQL("select $quantity*close from StocksDaily where symbol = '$symbol' order by date desc limit 1", "COL"); };
+  if ($@) {return (undef,$@); }
+  else { return ($stockValue[0],$@) } ;
+}
+
+
 # Generate a table of users and their permissions
 # ($table,$error) = UserPermTable()
 # $error false on success, error string on failure
-#
 sub UserPermTable {
   my @rows;
   eval { @rows = ExecSQL($dbuser, $dbpasswd, "select blog_users.name, blog_permissions.action from blog_users, blog_permissions where blog_users.name=blog_permissions.name order by blog_users.name"); }; 
