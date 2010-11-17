@@ -32,11 +32,12 @@ CREATE TABLE Portfolio (
 -- Holdings
 --
 create table Holdings (
-  id number not null primary key references Portfolio(pid),
+  id number not null references Portfolio(pid),
   datestamp number not null,
   symbol VARCHAR(10) not null,
   quantity number not null,
-  iinvest real not null
+  iinvest real not null,
+  constraint holding_unique UNIQUE (id,datestamp,symbol)
 );
 
 

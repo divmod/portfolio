@@ -56,14 +56,18 @@ use POSIX;
 $ENV{ORACLE_HOME}="/opt/oracle/product/11.2.0/db_1";
 $ENV{ORACLE_BASE}="/opt/oracle/product/11.2.0";
 $ENV{ORACLE_SID}="CS339";
-
-#
 # You need to override these for access to your database
 #
+<<<<<<< HEAD
 my $dbuser="drp925";
 my $dbpasswd="o3d7f737e";
 #my $dbuser="jhb348";
 #my $dbpasswd="ob5e18c77";
+=======
+my $dbuser="ikh831";
+my $dbpasswd="o29de7c3f";
+
+>>>>>>> e317fb53e610a0c85df6a7d87a16a0e6bff95a69
 
 #
 # The session cookie will contain the user's name and password so that 
@@ -298,6 +302,7 @@ if ($action eq "logout") {
 
 ##############PORTFOLIO##################################
 if ($action eq "display") {
+<<<<<<< HEAD
 
 #
 # Generate the form
@@ -316,11 +321,52 @@ if ($action eq "display") {
 	else{
 		print "count= ".$count;
 	}
+=======
+  
+    #
+    # Generate the form
+    # This is the part you will be extending
+    #   
+
+    my ($table,$error)=PortfoliosTable();
+    if ($error) {
+      print "Can't display your portfolios because: $error";
+    } else {
+      print "<h2>Your Portfolios</h2>$table";
+    }
+ 
+    #Query for portfolios and display the info
+    #To be done by Irene
+   
+     
+ 
+    #Also give the option to create a new portfolio
+    print h3('<a href="portfolio.pl?act=create" target="output">Create New Portfolio</a>');
+    my ($count, $error) = MysqlTest();
+    if($error){
+	  print "Can't get count: $error";
+    }
+    else{
+	print "count= ".$count;
+    }
+>>>>>>> e317fb53e610a0c85df6a7d87a16a0e6bff95a69
 }
 
+if($action eq "portfoliosummary") {
+  my $pid = param('pid');
+  my $strategy = param('strategy');
+  my $cash = param('cash');
+  my ($table,$error) = StocksTable($pid,$strategy,$cash);
+  if ($error) {
+     print "Can't display your stocks because: $error";
+  } else {
+    print "<h2>Your Stocks for Portfolio $pid</h2>$table";
+  }
+}
 # CREATE
 # Allows a user to create a new portfolio
 if($action eq "create"){
+<<<<<<< HEAD
 	print start_form(-name=>'Create'),
 				h2('Add Portfolio'),
 				"Portfolio Name:  ", textfield(-name=>'pname'),
@@ -367,6 +413,48 @@ if($action eq "create"){
 				print "<h3><a href=\"portfolio.pl?act=buy&pid=$pid\">Buy Stock</a></h3>";
 			}
 		}
+=======
+  print start_form(-name=>'Create'),
+	h2('Add Portfolio'),
+	"Portfolio Name:  ", textfield(-name=>'pname'),
+	p,
+	"Cash Amt:  ", textfield(-name=>'cashamt'),
+	p,
+	popup_menu(-name=>'strategy', -values=>['a', 'b'], -labels=>{'a' => 'buy n hold', 'b' => 'shannon rachet'}, -default=>'a'), 
+	p,
+	hidden(-name=>'postrun',-default=>['1']),
+	hidden(-name=>'act',-default=>['create']), 
+	submit(-name=>'Submit'),
+	reset(),
+	end_form;
+  if (param('postrun')) { 
+      #my $by=$user;
+      my $pname=param('pname');
+      my $cashamt=param('cashamt');
+      my $strategy=param('strategy');
+      #print $strategy;
+      my $s;
+      if($strategy eq "a"){
+	$s = "buy n hold";
+      }
+      elsif($strategy eq "b"){
+	$s = "shannon rachet";
+      }
+      #print "came here\n";
+      my $error=AddPortfolio($user, $pname, $cashamt,$strategy);
+      if ($error) { 
+	print "Can't post message because: $error";
+      }
+      else {
+	print "<h3>Portfolio $pname with \$$cashamt and $s strategy was successfully created by $user</h3>";
+	my ($pid, $error)=LookUpPortfolio($user, $pname);
+	#print "pid= ".$pid;
+	if($error){
+	  print "Can't buy: $error";
+	}
+	else{
+	  print "<h3><a href=\"portfolio.pl?act=buy&pid=$pid\">Buy Stock</a></h3>";
+>>>>>>> e317fb53e610a0c85df6a7d87a16a0e6bff95a69
 	}
 
 }#end Create
@@ -1170,10 +1258,108 @@ if ($action eq "cashmgmt") {
 			}
 		}
 
+#IKH - 
+sub PortfoliosTable {
+  my @rows;
+  my $out = "";
+  eval { @rows = ExecSQL($dbuser, $dbpasswd, "select name, cashamt, strategy, pid from portfolio where username = '$user'"); };
+  if ($@) {
+    return (undef,$@);
+  } else {
+    $out.="<table border><tr><td>NAME</td><td>CASH</td><td>STRATEGY</td><td>VALUE</td></tr>";
+
+    foreach my $row (@rows) {
+       my ($name, $cash, $strategy, $pid) = @{$row};
+       my ($strategyname, $portfoliosum)=("",$cash);
+       my @holdingrows;
+
+       eval { @holdingrows = ExecSQL($dbuser, $dbpasswd, "select datestamp, symbol, iinvest, quantity from holdings where id = '$pid'"); };
+       if ($@) {
+          return (undef,$@);
+       } else {
+         foreach my $holdingrow (@holdingrows) {
+           my ($date, $symbol, $invest, $quantity) = @{$holdingrow};
+
+
+           if($strategy eq "a"){
+             $strategyname = "buy n hold";
+             my ($stocksum,$error) = BuyNHold($symbol,$quantity);
+             if ($error) {
+               print "Can't display portfolio value  because: $error";
+             } else {
+               $portfoliosum += $stocksum;
+             }
+           }
+
+           elsif ($strategy eq "b") {
+	     $portfoliosum += `./shannon_ratchet.pl '$symbol' $invest 0 '$date'`;
+             $strategyname = "shannon ratchet";
+           }
+         } 
+       } 
+       $out.="<tr><td><a href = \"portfolio.pl?act=portfoliosummary&pid=$pid&strategy=$strategy&cash=$cash\">$name</a></td><td>$cash</td><td>$strategyname</td><td>$portfoliosum</td></tr>";
+    }
+    $out.="</table>";
+    return $out;
+  }
+}
+
+
+sub StocksTable {
+  my($pid, $strategy, $cash) = @_;
+  my @rows;
+  my $out = "";
+  eval { @rows = ExecSQL($dbuser, $dbpasswd, "select datestamp, symbol, iinvest, quantity from holdings where id = '$pid'"); };
+  if ($@) {
+    return (undef,$@);
+  } else {
+    $out.="<table border><tr><td>STOCK</td><td>DATE PURCHASED</td><td>INITIAL INVESTMENT</td><td>INITIAL QUANTITY</td><td>CURRENT VALUE</td></tr>";
+    my $portfoliosum = $cash;
+    foreach my $row (@rows) {
+       my ($date, $symbol, $invest, $quantity) = @{$row};
+       my $stocksum = 0;
+       my $error;
+       if($strategy eq "a"){
+          ($stocksum,$error) = BuyNHold($symbol,$quantity);
+          if ($error) { 
+             print "Can't display portfolio value  because: $error";
+          } else {
+             $portfoliosum += $stocksum;
+          }
+       }
+       elsif ($strategy eq "b") {
+	    $stocksum = `./shannon_ratchet.pl '$symbol' $invest 0 '$date'`;
+            $portfoliosum += $stocksum;
+       }
+ 
+       my $idate = strftime("%m/%d/%Y", localtime($date));
+       $out.="<tr><td>$symbol</td><td>$idate</td><td>$invest</td><td>$quantity</td><td>$stocksum</td><td><a href = \"historicinfo.pl?symbol=$symbol\">Historic Data</a></td>";
+       $out.="<td><a href = \"statistics.pl?symbol=$symbol\">Statistical Analysis</a></td>";
+       $out.="<td><a href = \"portfolio.pl?act=sell&pid=$pid&stock=$symbol&bdate=$date\">Sell</a></td></tr>";
+    }
+    
+    $out.="<tr><td>CASH</td><td></td><td></td><td></td><td>$cash</td>";
+    $out.="<tr><td></td><td></td><td></td><td>TOTAL PORTFOLIO VALUE:</td><td>$portfoliosum</td></table>";
+    $out.="<h3><a href=\"portfolio.pl?act=buy&pid=$pid\">Buy Stock</a></h3>";
+    $out.="<h3><a href=\"p_statistics.pl?pid=$pid\">Analyze This Portfolio</a></h3>";
+    $out.="<h3><a href=\"p_historicinfo.pl?pid=$pid\">Past Performance of This Portfolio</a></h3>";
+    return $out;
+  }
+}
 #
+sub BuyNHold {
+  my ($symbol,$quantity)=@_;
+  my @stockValue;
+  eval { @stockValue = ExecMySQL("select $quantity*close from StocksDaily where symbol = '$symbol' order by date desc limit 1", "COL"); };
+  if ($@) {return (undef,$@); }
+  else { return ($stockValue[0],$@) } ;
+}
+
+
 # Generate a table of users and their permissions
 # ($table,$error) = UserPermTable()
 # $error false on success, error string on failure
+<<<<<<< HEAD
 #
 		sub UserPermTable {
 			my @rows;
@@ -1186,6 +1372,19 @@ if ($action eq "cashmgmt") {
 							@rows),$@);
 			}
 		}
+=======
+sub UserPermTable {
+  my @rows;
+  eval { @rows = ExecSQL($dbuser, $dbpasswd, "select blog_users.name, blog_permissions.action from blog_users, blog_permissions where blog_users.name=blog_permissions.name order by blog_users.name"); }; 
+  if ($@) { 
+    return (undef,$@);
+  } else {
+    return (MakeTable("2D",
+		     ["Name", "Permission"],
+		     @rows),$@);
+  }
+}
+>>>>>>> e317fb53e610a0c85df6a7d87a16a0e6bff95a69
 
 #
 # Add a user
