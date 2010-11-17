@@ -32,13 +32,28 @@ CREATE TABLE Portfolio (
 -- Holdings
 --
 create table Holdings (
-  id number not null primary key references Portfolio(pid),
+  id number not null references Portfolio(pid),
   datestamp number not null,
   symbol VARCHAR(10) not null,
   quantity number not null,
-  iinvest real not null
+  iinvest real not null,
+  constraint holding_unique UNIQUE (id,datestamp,symbol)
 );
 
+
+--
+-- StocksDaily for new stocks
+--
+create table OurStocksDaily(
+    symbol char(16) not null,
+    datestamp number not null,
+    open real not null,
+    high real not null,
+    low real not null,
+    close real not null,
+    volume real not null,
+    constraint OurStocksDaily_unique UNIQUE (symbol, datestamp)
+);
 
 --
 -- Create the required users
