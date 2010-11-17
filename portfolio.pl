@@ -297,7 +297,7 @@ if ($action eq "logout") {
 
 ##############PORTFOLIO##################################
 if ($action eq "display") {
-  
+   #WriteStocksToFile();
     #
     # Generate the form
     # This is the part you will be extending
@@ -912,6 +912,8 @@ sub GetStocks{
   #$search = "^".$search;
   my @cols;
   #eval {@rows=ExecMySQL("select symbol from symbols where symbol regexp ?","ROW", $search);};
+  #my $r = "^C";
+  #eval {@cols=ExecMySQL("select symbol from symbols where symbol regexp ?","COL", $r);};
   eval {@cols=ExecMySQL("select symbol from symbols","COL");};
   if ($@) {
       return (undef,$@);
@@ -993,6 +995,19 @@ sub DeleteAHolding{
    my ($pid,$date,$sym)=@_;
    eval{ExecSQL($dbuser,$dbpasswd,"delete from Holdings where id=? and datestamp=? and symbol=?", undef, $pid, $date, $sym);};
   return @;
+}
+
+sub WriteStocksToFile{
+  
+  my (@stocks, $error2) = GetStocks();
+  if($error2){
+    print "Can't stocks:$error2";
+  }
+  open (MYFILE, '>>stocksC.txt');
+  foreach my $s (@stocks){
+    print MYFILE $s." ";
+  }
+      
 }
 #
 # @list=ExecMySQL($querystring, $type, @fill);
