@@ -56,11 +56,11 @@ use POSIX;
 $ENV{ORACLE_HOME}="/opt/oracle/product/11.2.0/db_1";
 $ENV{ORACLE_BASE}="/opt/oracle/product/11.2.0";
 $ENV{ORACLE_SID}="CS339";
-# You need to override these for access to your database
+# you need to override these for access to your database
 #
 
-my $dbuser="drp925";
-my $dbpasswd="o3d7f737e";
+#my $dbuser="drp925";
+#my $dbpasswd="o3d7f737e";
 #my $dbuser="jhb348";
 #my $dbpasswd="ob5e18c77";
 

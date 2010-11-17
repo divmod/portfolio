@@ -9,23 +9,28 @@ use DBI;
 
 my $cgi = new CGI();
 
-my $dbuser="ikh831";
-my $dbpasswd="o29de7c3f";
+my $show_params=1;
+my $show_sqlinput=1;
+my $show_sqloutput=1;
+my @sqlinput=();
+my @sqloutput=();
+#
+$ENV{ORACLE_HOME}="/opt/oracle/product/11.2.0/db_1";
+$ENV{ORACLE_BASE}="/opt/oracle/product/11.2.0";
+$ENV{ORACLE_SID}="CS339";
+# you need to override these for access to your database
+#
+
 #my $dbuser="drp925";
 #my $dbpasswd="o3d7f737e";
 #my $dbuser="jhb348";
 #my $dbpasswd="ob5e18c77";
-my @sqlinput=();
-my @sqloutput=();
-my $show_sqlinput=1;
-my $show_sqloutput=1;
-my $show_params=1;
+my $dbuser="ikh831";
+my $dbpasswd="o29de7c3f";
 
 
-$ENV{ORACLE_HOME}="/opt/oracle/product/11.2.0/db_1";
-$ENV{ORACLE_BASE}="/opt/oracle/product/11.2.0";
-$ENV{ORACLE_SID}="CS339";
 
+my $cgi = new CGI();
 
 print "Cache-Control: no-cache\n";
 print "Expires: Thu, 13 Mar 2003 07:12:13 GMT\n";  # ie, a long time ago
@@ -38,6 +43,14 @@ my $pid = param('pid');
 my ($pname, $error) = PidToPortfolioName($pid);
 if ($error) {
 	print "Error in Getting Portfolio Name: $error";
+
+#my $file = $cgi->param("uploadedfile");
+#my $file = "plot.dat";
+my $pid = param('pid');
+
+my ($pname, $error1) = PidToPortfolioName($pid);
+if ($error1) {
+	print $error1;
 }
 
 print start_form(-name=>'analysis'),
@@ -47,7 +60,6 @@ print start_form(-name=>'analysis'),
 			"Field Type: ", popup_menu(-name=>'field',-values=>['open','high','low','close']),p,
 			p,
 			hidden(-name=>'postrun',-default=>['1']),
-			hidden(-name=>'symbol',-default=>['$symbol']),
 			hidden(-name=>'pid',-default=>['$pid']),
 			submit,
 			end_form;
@@ -86,6 +98,27 @@ if (param('postrun')) {
 #	print @results,p;
 	print "<table>";
 	for ($i = 0; $i < $count; $i++) {
+=======
+	my $pid = param('pid');
+	my $field = param('field');
+	my $enddate = param('todate').' 05:00:00 GMT';
+	my $startdate = param('fromdate').' 05:00:00 GMT';
+
+	my (@symbolslist, $error2) = HoldingsFromPid($pid);
+	my ($symbols, $count);
+
+	foreach my $symbol (@symbolslist) {
+		$symbols .= "$symbol ";
+		$count++;
+	}
+
+	my @results =	`./get_info.pl --from='$startdate' --to='$enddate' --field=$field $symbols`;
+
+
+#	print @results,p;
+	print "<table>";
+	for (my $i = 0; $i < $count; $i++) {
+>>>>>>> 2403e05a4f9af06b3cdf53704ed83679f10df523:p_statistics.pl
 		print "<tr><td>$results[$i]</td></tr>";
 	}
 	print "</table>";
@@ -102,6 +135,10 @@ if (param('postrun')) {
 			print map { "<li>$_ => ".param($_)} param();
 			print "</menu>";
 		}
+<<<<<<< HEAD:p_statistics.pl
+=======
+		
+>>>>>>> 2403e05a4f9af06b3cdf53704ed83679f10df523:p_statistics.pl
 		if ($show_sqlinput || $show_sqloutput) { 
 			my $max= $show_sqlinput ?  $#sqlinput : $#sqloutput;
 			print h3('SQL');
@@ -115,18 +152,28 @@ if (param('postrun')) {
 	} 
 
 
+<<<<<<< HEAD:p_statistics.pl
 
+=======
+>>>>>>> 2403e05a4f9af06b3cdf53704ed83679f10df523:p_statistics.pl
 	print $cgi->end_html();
 
 	exit;
 
 }
 
+<<<<<<< HEAD:p_statistics.pl
 
 sub PidToPortfolioName {
 #	my $ppid = @_;
 	my @col;
 	eval {@col=ExecSQL($dbuser,$dbpasswd,"select name from Portfolio where pid='$pid'","COL");};
+=======
+sub PidToPortfolioName {
+#	my $pid = @_;
+	my @col;
+	eval {@col=ExecSQL($dbuser,$dbpasswd,"select name from Portfolio where pid=?","COL",$pid);};
+>>>>>>> 2403e05a4f9af06b3cdf53704ed83679f10df523:p_statistics.pl
 	if ($@) {
 		return (undef,$@);
 	}
@@ -136,7 +183,11 @@ sub PidToPortfolioName {
 }
 
 sub HoldingsFromPid {
+<<<<<<< HEAD:p_statistics.pl
 #	my $ppid = @_;
+=======
+#	my $pid = @_;
+>>>>>>> 2403e05a4f9af06b3cdf53704ed83679f10df523:p_statistics.pl
 	my @cols;
 	eval {@cols=ExecSQL($dbuser,$dbpasswd,"select distinct symbol from Holdings where id=?","COL",$pid);};
 	if ($@) {
@@ -147,28 +198,45 @@ sub HoldingsFromPid {
 	}
 }
 
+<<<<<<< HEAD:p_statistics.pl
 sub ExecSQL {
 	my ($user, $passwd, $querystring, $type, @fill) =@_;
 	if ($show_sqlinput) { 
 # if we are recording inputs, just push the query string and fill list onto the 
 # global sqlinput list
+=======
+
+
+
+
+sub ExecSQL {
+	my ($user, $passwd, $querystring, $type, @fill) =@_;
+	if ($show_sqlinput) { 
+>>>>>>> 2403e05a4f9af06b3cdf53704ed83679f10df523:p_statistics.pl
 		push @sqlinput, "$querystring (".join(",",map {"'$_'"} @fill).")";
 	}
 	my $dbh = DBI->connect("DBI:Oracle:",$user,$passwd);
 	if (not $dbh) { 
+<<<<<<< HEAD:p_statistics.pl
 # if the connect failed, record the reason to the sqloutput list (if set)
 # and then die.
+=======
+>>>>>>> 2403e05a4f9af06b3cdf53704ed83679f10df523:p_statistics.pl
 		if ($show_sqloutput) { 
 			push @sqloutput, "<b>ERROR: Can't connect to the database because of ".$DBI::errstr."</b>";
 		}
 		die "Can't connect to database because of ".$DBI::errstr;
 	}
 	my $sth = $dbh->prepare($querystring);
+<<<<<<< HEAD:p_statistics.pl
 
 	if (not $sth) { 
 #
 # If prepare failed, then record reason to sqloutput and then die
 #
+=======
+	if (not $sth) { 
+>>>>>>> 2403e05a4f9af06b3cdf53704ed83679f10df523:p_statistics.pl
 		if ($show_sqloutput) { 
 			push @sqloutput, "<b>ERROR: Can't prepare '$querystring' because of ".$DBI::errstr."</b>";
 		}
@@ -176,10 +244,14 @@ sub ExecSQL {
 		$dbh->disconnect();
 		die $errstr;
 	}
+<<<<<<< HEAD:p_statistics.pl
 
 	if (not $sth->execute(@fill)) { 
 #
 # if exec failed, record to sqlout and die.
+=======
+	if (not $sth->execute(@fill)) { 
+>>>>>>> 2403e05a4f9af06b3cdf53704ed83679f10df523:p_statistics.pl
 		if ($show_sqloutput) { 
 			push @sqloutput, "<b>ERROR: Can't execute '$querystring' with fill (".join(",",map {"'$_'"} @fill).") because of ".$DBI::errstr."</b>";
 		}
@@ -187,10 +259,14 @@ sub ExecSQL {
 		$dbh->disconnect();
 		die $errstr;
 	}
+<<<<<<< HEAD:p_statistics.pl
 #
 # The rest assumes that the data will be forthcoming.
 #
 #
+=======
+	
+>>>>>>> 2403e05a4f9af06b3cdf53704ed83679f10df523:p_statistics.pl
 	my @data;
 	if (defined $type and $type eq "ROW") { 
 		@data=$sth->fetchrow_array();
@@ -216,6 +292,7 @@ sub ExecSQL {
 	return @ret;
 }
 
+<<<<<<< HEAD:p_statistics.pl
 		sub MakeTable {
 			my ($type,$headerlistref,@list)=@_;
 			my $out;
@@ -236,10 +313,37 @@ sub ExecSQL {
 # If it's a single row, just output it in an obvious way
 #
 				if ($type eq "ROW") { 
+=======
+
+
+
+
+sub MakeTable {
+	my ($type,$headerlistref,@list)=@_;
+	my $out;
+#
+# Check to see if there is anything to output
+#
+	if ((defined $headerlistref) || ($#list>=0)) {
+# if there is, begin a table
+#
+		$out="<table border>";
+#
+# if there is a header list, then output it in bold
+#
+		if (defined $headerlistref) { 
+			$out.="<tr>".join("",(map {"<td><b>$_</b></td>"} @{$headerlistref}))."</tr>";
+		}
+#
+# If it's a single row, just output it in an obvious way
+#
+		if ($type eq "ROW") { 
+>>>>>>> 2403e05a4f9af06b3cdf53704ed83679f10df523:p_statistics.pl
 #
 # map {code} @list means "apply this code to every member of the list
 # and return the modified list.  $_ is the current list member
 #
+<<<<<<< HEAD:p_statistics.pl
 					$out.="<tr>".(map {"<td>$_</td>"} @list)."</tr>";
 				} elsif ($type eq "COL") { 
 #
@@ -259,5 +363,26 @@ sub ExecSQL {
 			}
 			return $out;
 		}
+=======
+			$out.="<tr>".(map {"<td>$_</td>"} @list)."</tr>";
+		} elsif ($type eq "COL") { 
+#
+# ditto for a single column
+#
+			$out.=join("",map {"<tr><td>$_</td></tr>"} @list);
+		} else { 
+#
+# For a 2D table, it's a bit more complicated...
+#
+			$out.= join("",map {"<tr>$_</tr>"} (map {join("",map {"<td>$_</td>"} @{$_})} @list));
+		}
+		$out.="</table>";
+	} else {
+# if no header row or list, then just say none.
+		$out.="(none)";
+	}
+	return $out;
+}
+>>>>>>> 2403e05a4f9af06b3cdf53704ed83679f10df523:p_statistics.pl
 
 
