@@ -9,7 +9,6 @@ $pass='cs339';
 $db='cs339';
 
 $close=1;
-
 $field='close';
 
 &GetOptions( "field=s" => \$field,
@@ -18,7 +17,6 @@ $field='close';
 
 if (defined $from) { $from=parsedate($from);}
 if (defined $to) { $to=parsedate($to); }
-
 
 $#ARGV>=0 or die "usage: get_info.pl [--field=field] [--from=date] [--to=date] SYMBOL+\n";
 
