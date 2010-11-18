@@ -33,6 +33,8 @@ $plot=0;
 
 #if (defined $from) { $from=parsedate($from); }
 #if (defined $to) { $to=parsedate($to); }
+#if (defined $from) { $from=$from; }
+#if (defined $to) { $to=$to; }
 
 
 $#ARGV==0 or die "usage: get_data.pl [--open] [--high] [--low] [--close] [--vol] [--from=date] [--too=date] [--plot] SYMBOL\n";
