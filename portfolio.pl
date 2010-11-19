@@ -529,8 +529,15 @@ if($action eq "confirmBuy"){
 
 
 	#check to see if $date and $stock already in Holdings is so then to an update instead of insert
-	my (@data, $error) = GetAHolding($pid, $date, $stock);
-	if(scalar(@data) != 0){
+	my ($exists, $error) = HoldingExists($pid, $date, $stock);
+	if($error){
+	  print "problem checking if holding exists: $error";
+	}
+	if($exists){
+	  my (@data, $ee) = GetAHolding($pid, $date, $stock);
+	  if($ee){
+	    print "Could get holding info: $ee";
+	  }
 	  $quantity = $quantity + $data[0];
 	  $iamt = $iamt + $data[1];
 	  my $e = UpdateAHolding($pid, $date, $stock, $quantity,$iamt);
@@ -538,6 +545,7 @@ if($action eq "confirmBuy"){
 	else{
 	    #Make a new entry in the holdings table
 	    my $error1 = AddToHoldings($pid, $date, $stock,$quantity, $iamt);
+	    print "Came to Add To Holding\n";
 	    if ($error1) { 
 		print "Holding transaction not succsessful: $error1";
 	    }
@@ -1122,6 +1130,18 @@ sub GetAHolding{
 	}
 }
 
+sub HoldingExists{
+
+	my ($pid,$date,$sym)=@_;
+	my @col;
+	eval { @col=ExecSQL($dbuser,$dbpasswd,"select count(*) from Holdings where id =? and datestamp =? and symbol=?",'COL', $pid, $date, $sym); };
+	if($@){
+		return (undef, $@);
+	}
+	else{
+		return ($col[0] > 0, $@);
+	}
+}
 
 #get a row in holdings based on pid, stock, sym with $quantity and $iinvest
 sub UpdateAHolding{
