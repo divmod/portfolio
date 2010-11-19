@@ -49,35 +49,35 @@ print start_form(-name=>'selectstat'),
 			h2('Statistical Analysis of Portfolio ', $pname),
 			"Select Statistic Type: ",
 			radio_group(-name=>'stat_type',-values=>['Standard Deviation/Coefficient of Variation','Covariance Matrix','Correlation Matrix'],
-			-default=>'Standard Deviation/Coefficient of Variation'),
+					-default=>'Standard Deviation/Coefficient of Variation'),
 			hidden(-name=>'pid',-default=>['$pid']),
 			submit('typebutton','Change'),
 			end_form;
 if ($stat_type eq 'Standard Deviation/Coefficient of Variation') {
 	print start_form(-name=>'analysis'),
-			"From Date (mm/dd/yyyy): ", textfield(-name=>'fromdate',default=>'09/07/1984'),p,
-			"To Date (mm/dd/yyyy): ", textfield(-name=>'todate',default=>'06/30/2006'),p,
-			"Field Type: ", popup_menu(-name=>'field',-values=>['open','high','low','close']),p,
+				"From Date (mm/dd/yyyy): ", textfield(-name=>'fromdate',default=>'09/07/1984'),p,
+				"To Date (mm/dd/yyyy): ", textfield(-name=>'todate',default=>'06/30/2006'),p,
+				"Field Type: ", popup_menu(-name=>'field',-values=>['open','high','low','close']),p,
 				p,
-			hidden(-name=>'postrun',-default=>['1']),
-			hidden(-name=>'stat_type',-default=>['$stat_type']),
-			hidden(-name=>'pid',-default=>['$pid']),
-			submit,
-			end_form;
-		}
-		else {
+				hidden(-name=>'postrun',-default=>['1']),
+				hidden(-name=>'stat_type',-default=>['$stat_type']),
+				hidden(-name=>'pid',-default=>['$pid']),
+				submit,
+				end_form;
+}
+else {
 	print start_form(-name=>'analysis'),
-			"From Date (mm/dd/yyyy): ", textfield(-name=>'fromdate',default=>'09/07/1984'),p,
-			"To Date (mm/dd/yyyy): ", textfield(-name=>'todate',default=>'06/30/2006'),p,
-			"Field 1 Type: ", popup_menu(-name=>'field1',-values=>['open', 'high', 'low', 'close']),p,
+				"From Date (mm/dd/yyyy): ", textfield(-name=>'fromdate',default=>'09/07/1984'),p,
+				"To Date (mm/dd/yyyy): ", textfield(-name=>'todate',default=>'06/30/2006'),p,
+				"Field 1 Type: ", popup_menu(-name=>'field1',-values=>['open', 'high', 'low', 'close']),p,
 				"Field 2 Type: ", popup_menu(-name=>'field2',-values=>['open', 'high', 'low', 'close']),p,
 				p,
-			hidden(-name=>'postrun',-default=>['1']),
-			hidden(-name=>'stat_type',-default=>['$stat_type']),
-			hidden(-name=>'pid',-default=>['$pid']),
-			submit,
-			end_form;
-		}
+				hidden(-name=>'postrun',-default=>['1']),
+				hidden(-name=>'stat_type',-default=>['$stat_type']),
+				hidden(-name=>'pid',-default=>['$pid']),
+				submit,
+				end_form;
+}
 
 #print start_form(-name=>'analysis'),
 #			"From Date (mm/dd/yyyy): ", textfield(-name=>'fromdate',default=>'09/07/1984'),p,
@@ -112,7 +112,7 @@ if (param('postrun')) {
 	my @results;
 	my $i;
 	my $stockslist;
-	
+
 	my (@stocks, $error2) = HoldingsFromPid($pid);
 	if ($error2) {
 		print "Error in getting holdings from portfolio: $error2";
@@ -142,13 +142,13 @@ if (param('postrun')) {
 		else {
 			@matrix = `./get_covar.pl --from='$startdate' --to='$enddate' --field1='$field1' --field2='$field2' --corrcoeff $stockslist`;
 		}
-		
+
 		print "<table>";
 		print @matrix;
 		print "</table>";
 	}
 
-print p;
+	print p;
 
 #	print @results,p;
 #	for ($i = 0; $i < $count; $i++) {

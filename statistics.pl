@@ -21,6 +21,7 @@ print "<head><title>Show Statistical Analysis of Symbol</title></head>";
 #my $fromdate = param('fromdate');
 my $symbol = param('symbol');
 print start_form(-name=>'analysis'),
+			h2('Statistical Analysis of Stock ', $symbol),
 			"From Date (mm/dd/yyyy): ", textfield(-name=>'fromdate',default=>'09/07/1984'),p,
 			"To Date (mm/dd/yyyy): ", textfield(-name=>'todate',default=>'06/30/2006'),p,
 			"Field Type: ", popup_menu(-name=>'field',-values=>['open','high','low','close']),p,
