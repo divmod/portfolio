@@ -20,16 +20,14 @@ print "<head><title>Show Statistical Analysis of Symbol</title></head>";
 #my $pid = param('pid');
 #my $fromdate = param('fromdate');
 my $symbol = param('symbol');
-
 print start_form(-name=>'analysis'),
-			h2('Statistical Analysis of Symbol ', $symbol),
 			"From Date (mm/dd/yyyy): ", textfield(-name=>'fromdate',default=>'09/07/1984'),p,
 			"To Date (mm/dd/yyyy): ", textfield(-name=>'todate',default=>'06/30/2006'),p,
 			"Field Type: ", popup_menu(-name=>'field',-values=>['open','high','low','close']),p,
 			p,
 			hidden(-name=>'postrun',-default=>['1']),
 			hidden(-name=>'symbol',-default=>['$symbol']),
-			submit,
+			submit('submitbutton','Submit'),
 			end_form;
 
 if (param('postrun')) {
@@ -42,14 +40,12 @@ if (param('postrun')) {
 	my $i;
 	my @results =	`./get_info.pl --from='$startdate' --to='$enddate' --field=$field --plot $symbol`;
 
-
+	print "<pre>";
 #	print @results,p;
-	print "<table>";
 	for ($i = 0; $i < 2; $i++) {
-		print "<tr><td>$results[$i]</td></tr>";
+		print "$results[$i]";
 	}
-	print "</table>";
-
+	print "</pre>";
 	print $cgi->end_html();
 
 	exit;
