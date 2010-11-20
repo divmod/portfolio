@@ -455,7 +455,7 @@ if($action eq "buy"){
 		$m = param('month');
 		$d = param('day');
 		$y = param('year');
-		$pdate = $m."/".$d."/".$y." 05:00:00 GMT";
+		$pdate = $m."/".$d."/".$y." 00:00:00 GMT";
 		$date =  parsedate($pdate);
 		my($exists1, $error3) = StockExistsOnDateM($date, $stock);
 		#my ($value, $ee) = test($stock);
@@ -467,34 +467,44 @@ if($action eq "buy"){
 		}
 		
 		else{
-		        print "Came here\n";
+		        #print "Came here in buy\n";
 			my $deduct = $cashamt - $iamt;
 			if($deduct < 0){
 				$iamt = $cashamt;
 			}
+			my ($exactDate, $ee);
+			
 			my ($closePrice, $error4);
 			if($exists1){
-			 ($closePrice, $error4) = GetClosingPriceM($date, $stock);
+			  ($exactDate, $ee) = exactDateM($date, $stock);
+			   if($ee){
+			    print "Could get the exactDate: $ee";
+			   }
+			  ($closePrice, $error4) = GetClosingPriceM($exactDate, $stock);
 			}
 			elsif($exists2){
-			  ($closePrice, $error4) = GetClosingPriceO($date, $stock);
+			  ($exactDate, $ee) = exactDateO($date, $stock);
+			    if($ee){
+			      print "Could get the exactDate: $ee";
+			    }
+			  ($closePrice, $error4) = GetClosingPriceO($exactDate, $stock);
 			   #print "closePrice: ".$closePrice;
 			}
 			if($error4){
 				print "Problem getting close price:$error4";
 			}
 			if($closePrice > $iamt){
-				print "<h4>You have insufficient funds to buy stock $stock as the close strike price for one share on".gmtime($date)." is \$$closePrice</h4>";
+				print "<h4>You have insufficient funds to buy stock $stock as the close strike price for one share on".gmtime($exactDate)." is \$$closePrice</h4>";
 				#print "<h3><a href=\"portfolio.pl?act=cashManagement&pid=$pid\">Add Cash to Portfolio</a></h3>";
 			}
 			else{
 				my $quantity = floor($iamt/$closePrice);
 #print "<h4>Quantity:".$quantity."</h4>";
 				print "<h4>Stock Chosen:".$stock."</h4>";
-				print "<h4>Close price on ".gmtime($date)." is "."\$".$closePrice."</h4>";
+				print "<h4>Close price on ".gmtime($exactDate)." is "."\$".$closePrice."</h4>";
 				$iamt = $quantity * $closePrice;
 				print "<h4>Investment Amount to be Deducted for ". $quantity." shares : "."\$".$iamt."</h4>";
-				print "<h3><a href=\"portfolio.pl?act=confirmBuy&pid=$pid&stock=$stock&date=$date&iamt=$iamt&quant=$quantity\">Confirm</a></h3>";
+				print "<h3><a href=\"portfolio.pl?act=confirmBuy&pid=$pid&stock=$stock&date=$exactDate&iamt=$iamt&quant=$quantity\">Confirm</a></h3>";
 			}#end closePrice<= $iamt
 		}#end stock exists for date
 
@@ -678,15 +688,25 @@ if($action eq "sell"){
 		$m = param('month');
 		$d = param('day');
 		$y = param('year');
-		$d = $m."/".$d."/".$y." 05:00:00 GMT";
+		$d = $m."/".$d."/".$y." 00:00:00 GMT";
 		$sdate =  parsedate($d);
 #print $sdate;
 		my($exists1, $error2) = StockExistsOnDateM($sdate, $stock);
 		my($exists2, $error3) = StockExistsOnDateO($sdate, $stock);
+		my ($exactSDate, $ee);
+		if($exists1){
+		  ($exactSDate, $ee) = exactDateM($sdate, $stock);
+		}
+		elsif($exists2){
+		  ($exactSDate, $ee) = exactDateO($sdate, $stock);
+		}
+		if($ee){
+		  print "Could not get the exact sell date: $ee";
+		}
 		if(!$exists1 && !$exists2){
 			print h2('This stock does not exist for the date entered. Try Again!!'); 
 		}
-		elsif($sdate < $bdate){
+		elsif($exactSDate < $bdate){
 			print h2('Cannot sell on date which is prior to purchase date to the stock. Try Again!');
 		}
 		elsif($quant - $qsell < 0){
@@ -694,8 +714,8 @@ if($action eq "sell"){
 		}
 		else{
 			my $diff = $quant - $qsell;
-			print "You want to sell ".$qsell." shares of ". $stock. " stock on ".gmtime($sdate);
-			print "<h3><a href=\"portfolio.pl?act=sellConfirm&pid=$pid&stock=$stock&bdate=$bdate&sdate=$sdate&qsell=$qsell&diff=$diff\">Confirm</a></h3>";
+			print "You want to sell ".$qsell." shares of ". $stock. " stock on ".gmtime($exactSDate);
+			print "<h3><a href=\"portfolio.pl?act=sellConfirm&pid=$pid&stock=$stock&bdate=$bdate&sdate=$exactSDate&qsell=$qsell&diff=$diff\">Confirm</a></h3>";
 #Note put a cancel link that goes back to the portfolio.
 		}   
 	}#end postrun
@@ -1036,12 +1056,12 @@ sub GetPortfolioNames {
 
 #end Joy Code Section#
 
-#get closing price of the stock on based on the date from StockDaily
+#check if the stock exists in StockDaily
 sub StockExistsOnDateM{
 	my($date, $sym) = @_;
 	my @col;
 #select count(*) from StocksDaily where date=1151470800 and symbol='GOOG'; 
-	eval {@col=ExecMySQL("select count(*) from StocksDaily where date=? and symbol=?","COL",$date,$sym);};
+	eval {@col=ExecMySQL("select count(*) from StocksDaily where date >=? and date < ? and symbol=?","COL",$date,$date+(24*60*60),$sym);};
 	if ($@) {
 		return (undef,$@);
 	}
@@ -1050,14 +1070,16 @@ sub StockExistsOnDateM{
 	}
 }
 
-#get closing price of the stock on based on the date from OurStockDaily
+#check if the stock exists in NewStocks
 sub StockExistsOnDateO{
-        #print "I am in Stock\n";
+       
 	my($date, $sym) = @_;
+	 #print "I am in Stock".$date."\n";
 	#print "sym: ".$sym."\n";
+	my $endDate = $date + (24*60*60);
 	my @col;
 #select count(*) from OurStocksDaily where date=1151470800 and symbol='GOOG'; 
-	eval {@col=ExecSQL($dbuser,$dbpasswd,"select count(*) from NewStocks where DATESTAMP=? and SYMBOL=?","COL",$date,$sym);};
+	eval {@col=ExecSQL($dbuser,$dbpasswd,"select count(*) from NewStocks where datestamp>=? and datestamp<? and symbol=?","COL",$date,$endDate,$sym);};
 	if ($@) {
 		return (undef,$@);
 	}
@@ -1067,11 +1089,40 @@ sub StockExistsOnDateO{
 	}
 }
 
+#return the date based on range and symbol
+sub exactDateM{
+  my($date, $sym) = @_;
+	my @col;
+#select count(*) from StocksDaily where date=1151470800 and symbol='GOOG'; 
+	eval {@col=ExecMySQL("select date from StocksDaily where date >=? and date < ? and symbol=?","COL",$date,$date+(24*60*60),$sym);};
+	if ($@) {
+		return (undef,$@);
+	}
+	else {
+		return ($col[0],$@);
+	}
+}
+
+sub exactDateO{
+	my($date, $sym) = @_;
+	#print "date:".$date;
+	my @col;
+	my $endDate = $date+(24*60*60);
+#select count(*) from OurStocksDaily where date=1151470800 and symbol='GOOG'; 
+	eval {@col=ExecSQL($dbuser,$dbpasswd,"select DATESTAMP from NewStocks where datestamp>=? and datestamp<? and symbol=?","COL",$date,$endDate,$sym);};
+	if ($@) {
+		return (undef,$@);
+	}
+	else {
+	 #       print "c: ".$col[0];
+		return ($col[0],$@);
+	}
+}
 #get closing price of the stock on based on the date from StocksDaily
 sub GetClosingPriceM{
 	my($date, $sym) = @_;
-	print "date: ".$date;
-	print "sym: ".$sym;
+	#print " ".$date;
+	#print "sym: ".$sym;
 	my @col;
 #select close from StocksDaily where date=1151470800 and symbol='GOOG'; 
 	eval {@col=ExecMySQL("select close from StocksDaily where date=? and symbol=?","COL",$date, $sym);};
