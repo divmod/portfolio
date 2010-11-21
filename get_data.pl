@@ -4,10 +4,14 @@ use Getopt::Long;
 use Time::ParseDate;
 use Time::CTime;
 use FileHandle;
+use DBI;
 
 $user='cs339';
 $pass='cs339';
 $db='cs339';
+
+$oracle_user='drp925';
+$oracle_pass='o3d7f737e';
 
 $close=1;
 
@@ -61,6 +65,58 @@ $exec = "mysql --batch --silent --user=$user --password=$pass --database=$db --e
 $exec .= ">_plot.in" if $plot;
 
 system $exec;
+
+;
+
+
+@newdata = ExecSQL($oracle_user,$oracle_pass,"select datestamp,close from NewStocks where symbol = '$symbol' order by datestamp") ;
+
+foreach $row(@newdata) {
+($date,$close) = @{$row};
+print "$date      $close\n";
+
+}
+
+ sub ExecSQL {
+                        my ($user, $passwd, $querystring,  @fill) =@_;
+                        my $dbh = DBI->connect("DBI:Oracle:",$user,$passwd);
+                        if (not $dbh) {
+# if the connect failed, record the reason to the sqloutput list (if set)
+# and then die.
+                                die "Can't connect to database because of ".$DBI::errstr;
+                        }
+                        my $sth = $dbh->prepare($querystring);
+                        if (not $sth) {
+#
+# If prepare failed, then record reason to sqloutput and then die
+#
+                                my $errstr="Can't prepare $querystring because of ".$DBI::errstr;
+                                $dbh->disconnect();
+                                die $errstr;
+                        }
+                        if (not $sth->execute(@fill)) {
+#
+# if exec failed, record to sqlout and die.
+                                my $errstr="Can't execute $querystring with fill (".join(",",map {"'$_'"} @fill).") because of ".$DBI::errstr;
+ $dbh->disconnect();
+                                die $errstr;
+                        }
+#
+# The rest assumes that the data will be forthcoming.
+#
+#
+                        my @data;
+                        my @ret;
+                        while (@data=$sth->fetchrow_array()) {
+                                push @ret, [@data];
+                        }
+                        $sth->finish();
+                        $dbh->disconnect();
+                        return @ret;
+                }
+
+
+
 
 #if ($plot) {
 #  open(GNUPLOT, "|gnuplot");

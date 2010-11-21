@@ -59,13 +59,13 @@ $ENV{ORACLE_SID}="CS339";
 # you need to override these for access to your database
 #
 
-#my $dbuser="drp925";
-#my $dbpasswd="o3d7f737e";
+my $dbuser="drp925";
+my $dbpasswd="o3d7f737e";
 #my $dbuser="jhb348";
 #my $dbpasswd="ob5e18c77";
 
-my $dbuser="ikh831";
-my $dbpasswd="o29de7c3f";
+#my $dbuser="ikh831";
+#my $dbpasswd="o29de7c3f";
 
 
 #
@@ -1247,7 +1247,7 @@ sub StocksTable {
   if ($@) {
     return (undef,$@);
   } else {
-    $out.="<table border><tr><td>STOCK</td><td>DATE PURCHASED</td><td>INITIAL INVESTMENT</td><td>INITIAL QUANTITY</td><td>CURRENT VALUE</td></tr>";
+    $out.="<table border><tr><td>STOCK</td><td>DATE PURCHASED</td><td>INVESTMENT</td><td>QUANTITY</td><td>CURRENT VALUE</td></tr>";
     my $portfoliosum = $cash;
     foreach my $row (@rows) {
        my ($date, $symbol, $invest, $quantity) = @{$row};
@@ -1266,7 +1266,7 @@ sub StocksTable {
             $portfoliosum += $stocksum;
        }
  
-       my $idate = strftime("%m/%d/%Y", localtime($date));
+       my $idate = strftime("%m/%d/%Y", gmtime($date));
        $out.="<tr><td>$symbol</td><td>$idate</td><td>$invest</td><td>$quantity</td><td>$stocksum</td><td><a href = \"historicinfo.pl?symbol=$symbol\">Historic Data</a></td>";
        $out.="<td><a href = \"statistics.pl?symbol=$symbol\">Statistical Analysis</a></td>";
        $out.="<td><a href = \"portfolio.pl?act=sell&pid=$pid&stock=$symbol&bdate=$date\">Sell</a></td></tr>";
@@ -1284,9 +1284,12 @@ sub StocksTable {
 sub BuyNHold {
   my ($symbol,$quantity)=@_;
   my @stockValue;
-  eval { @stockValue = ExecMySQL("select $quantity*close from StocksDaily where symbol = '$symbol' order by date desc limit 1", "COL"); };
-  if ($@) {return (undef,$@); }
-  else { return ($stockValue[0],$@) } ;
+  eval { @stockValue = ExecSQL($dbuser, $dbpasswd, "select $quantity*close from NewStocks where symbol = '$symbol' and datestamp = (select max(datestamp) from NewStocks where symbol = '$symbol')", "COL"); };
+  if ($@) {
+    eval { @stockValue = ExecMySQL("select $quantity*close from StocksDaily where symbol = '$symbol' order by date desc limit 1", "COL"); };
+    if ($@) {return (undef,$@); }
+    else { return ($stockValue[0],$@) } ;
+  } else { return ($stockValue[0],$@) } ;
 }
 
 
