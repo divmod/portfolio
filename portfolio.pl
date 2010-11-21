@@ -249,7 +249,6 @@ if ($action eq "logout") {
 if ($action eq "display") {
 #
 #   
-
 	topPanel();
 
 	my ($table,$error)=PortfoliosTable();
@@ -454,7 +453,7 @@ if($action eq "confirmBuy"){
 	$quantity = param('quant');
 	print start_form(-name=>'ConfirmBuy'),
 	      h2('Successful Purchase Summary'),
-	      "Date of Purchase: ".localtime($date),
+	      "Date of Purchase: ".gmtime($date),
 	      p,
 	      "Stock Chosen:".$stock,
 	      p,
@@ -488,7 +487,7 @@ if($action eq "confirmBuy"){
 	else{
 #Make a new entry in the holdings table
 		my $error1 = AddToHoldings($pid, $date, $stock,$quantity, $iamt);
-		print "Came to Add To Holding\n";
+#		print "Came to Add To Holding\n";
 		if ($error1) { 
 			print "Holding transaction not succsessful: $error1";
 		}
@@ -729,7 +728,7 @@ if($action eq "sellConfirm"){
 	print start_form(-name=>'Sell Summary'),
 	      h2('Sell Summary'),
 	      p,
-	      "Sold ".$qsell." shares of stock ". $stock. " on ".localtime($sdate),
+	      "Sold ".$qsell." shares of stock ". $stock. " on ".gmtime($sdate),
 	      p,
 	      "Cash Received: \$".$cashback,
 	      p,
@@ -1409,8 +1408,10 @@ sub StocksTable {
 			}
 
 			my $idate = strftime("%m/%d/%Y", gmtime($date));
-			$out.="<tr><td>$symbol</td><td>$idate</td><td>$invest</td><td>$quantity</td><td>$stocksum</td><td><a href = \"historicinfo.pl?symbol=$symbol\">Historic Data</a></td>";
+			$out.="<tr><td>$symbol</td><td>$idate</td><td>$invest</td><td>$quantity</td><td>$stocksum</td>";
+			$out.="<td><a href = \"historicinfo.pl?symbol=$symbol\">Historic Data</a></td>";
 			$out.="<td><a href = \"statistics.pl?symbol=$symbol\">Statistical Analysis</a></td>";
+			$out.="<td><a href = \"predict.pl?symbol=$symbol\">Predict</a></td>";
 			$out.="<td><a href = \"portfolio.pl?act=sell&pid=$pid&stock=$symbol&bdate=$date\">Sell</a></td></tr>";
 		}
 
@@ -1418,6 +1419,7 @@ sub StocksTable {
 		$out.="<tr><td></td><td></td><td></td><td>TOTAL PORTFOLIO VALUE:</td><td>$portfoliosum</td></table>";
 		$out.="<h3><a href=\"portfolio.pl?act=buy&pid=$pid\">Buy Stock</a></h3>";
 		$out.="<h3><a href=\"p_statistics.pl?pid=$pid\">Analyze This Portfolio</a></h3>";
+		$out.="<h3><a href=\"p_predict.pl?pid=$pid\">Predict This Portfolio</a></h3>";
 		$out.="<h3><a href=\"p_historicinfo.pl?pid=$pid\">Past Performance of This Portfolio</a></h3>";
 		return $out;
 	}
