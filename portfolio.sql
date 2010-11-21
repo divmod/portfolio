@@ -42,6 +42,30 @@ create table Holdings (
 
 
 --
+-- StocksDaily for new stocks
+--
+create table OurStocksDaily(
+    symbol char(16) not null,
+    datestamp number not null,
+    open real not null,
+    high real not null,
+    low real not null,
+    close real not null,
+    volume real not null,
+    constraint OurStocksDaily_unique UNIQUE (symbol, datestamp)
+);
+
+create table NewStocks(
+    symbol VARCHAR(10) not null,
+    datestamp number not null,
+    open real not null,
+    high real not null,
+    low real not null,
+    close real not null,
+    volume real not null,
+    constraint OurStocksDaily_unique UNIQUE (symbol, datestamp)
+);
+--
 -- Create the required users
 --
 INSERT INTO Users (username,password) VALUES ('none','nonenone');
