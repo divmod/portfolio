@@ -43,6 +43,13 @@ $#ARGV==0 or die "usage: get_data.pl [--open] [--high] [--low] [--close] [--vol]
 
 $symbol=shift;
 
+push @fields2, "datestamp" if !$nodate;
+push @fields2, "open" if $open;
+push @fields2, "high" if $high;
+push @fields2, "low" if $low;
+push @fields2, "close" if $close;
+push @fields2, "volume" if $vol;
+
 push @fields, "date" if !$nodate;
 push @fields, "open" if $open;
 push @fields, "high" if $high;
@@ -51,12 +58,17 @@ push @fields, "close" if $close;
 push @fields, "volume" if $vol;
 
 
-
 $sql = "select ".join(",",@fields). " from StocksDaily";
 $sql.= " where symbol='$symbol'";
 $sql.= " and date>=$from" if $from;
 $sql.= " and date<=$to" if $to;
 $sql.= " order by date";
+
+$sql2 = "select ".join(",",@fields2). " from NewStocks";
+$sql2.= " where symbol='$symbol'";
+$sql2.= " and datestamp>=$from" if $from;
+$sql2.= " and datestamp<=$to" if $to;
+$sql2.= " order by datestamp";
 
 #print STDERR $sql,"\n";
 
@@ -69,13 +81,15 @@ system $exec;
 ;
 
 
-@newdata = ExecSQL($oracle_user,$oracle_pass,"select datestamp,close from NewStocks where symbol = '$symbol' order by datestamp") ;
+@newdata = ExecSQL($oracle_user,$oracle_pass,$sql2) ;
+
+open(FILE, ">>_plot.in");
 
 foreach $row(@newdata) {
-($date,$close) = @{$row};
-print "$date      $close\n";
-
+	$printrow = join("	", @{$row});
+	print "$printrow\n";
 }
+close(FILE);
 
  sub ExecSQL {
                         my ($user, $passwd, $querystring,  @fill) =@_;
