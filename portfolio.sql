@@ -44,15 +44,25 @@ create table Holdings (
 --
 -- StocksDaily for new stocks
 --
-create table OurStocksDaily(
-    symbol char(16) not null,
-    datestamp number not null,
-    open real not null,
-    high real not null,
-    low real not null,
-    close real not null,
-    volume real not null,
-    constraint OurStocksDaily_unique UNIQUE (symbol, datestamp)
+--create table OurStocksDaily(
+--    symbol char(16) not null,
+--    datestamp number not null,
+ --   open real not null,
+--    high real not null,
+--    low real not null,
+--    close real not null,
+--    volume real not null,
+--    constraint OurStocksDaily_unique UNIQUE (symbol, datestamp)
+--);
+
+--
+-- MarketDaily for daily market values
+--
+
+create table MarketDaily(
+	datestamp number primary key,
+	close real not null,
+	constraint MarketDaily_unique UNIQUE (datestamp,close)
 );
 
 create table NewStocks(

@@ -53,6 +53,7 @@ print start_form(-name=>'selectstat'),
 			hidden(-name=>'pid',-default=>['$pid']),
 			submit('typebutton','Change'),
 			end_form;
+
 if ($stat_type eq 'Standard Deviation/Coefficient of Variation') {
 	print start_form(-name=>'analysis'),
 				"From Date (mm/dd/yyyy): ", textfield(-name=>'fromdate',default=>'09/07/1984'),p,
@@ -65,7 +66,7 @@ if ($stat_type eq 'Standard Deviation/Coefficient of Variation') {
 				submit,
 				end_form;
 }
-else {
+elsif ($stat_type eq 'Covariance Matrix' || $stat_type eq 'Correlation Matrix') {
 	print start_form(-name=>'analysis'),
 				"From Date (mm/dd/yyyy): ", textfield(-name=>'fromdate',default=>'09/07/1984'),p,
 				"To Date (mm/dd/yyyy): ", textfield(-name=>'todate',default=>'06/30/2006'),p,
@@ -77,6 +78,19 @@ else {
 				hidden(-name=>'pid',-default=>['$pid']),
 				submit,
 				end_form;
+}
+else {
+	print start_form(-name=>'analysis'),
+				"From Date (mm/dd/yyyy): ", textfield(-name=>'fromdate',default=>'09/07/1984'),p,
+				"To Date (mm/dd/yyyy): ", textfield(-name=>'todate',default=>'06/30/2006'),p,
+				"Field Type: ", popup_menu(-name=>'field',-values=>['open','high','low','close']),p,
+				p,
+				hidden(-name=>'postrun',-default=>['1']),
+				hidden(-name=>'stat_type',-default=>['$stat_type']),
+				hidden(-name=>'pid',-default=>['$pid']),
+				submit,
+				end_form;
+
 }
 
 #print start_form(-name=>'analysis'),
