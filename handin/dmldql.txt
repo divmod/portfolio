@@ -1,0 +1,43 @@
+########DML###########
+
+Portfolio:
+1. Add Portfolio
+INSERT INTO Portfolio(pid, username, name, cashamt, strategy) VALUES(pid.nextval,'root','myportfolio', 10000.00, 'b');
+
+2. Manage Cash
+Update Portfolio set cashamt=7000 where pid=1035;
+
+
+--------------------
+
+Holdings:
+1. Add to Holdings
+INSERT into Holdings(id, datestamp, symbol, quantity, iinvest) values(2081, 1151470800 , 'GOOG', 10, 500);
+
+--------------------
+
+
+########DQL###########
+
+Portfolio:
+1. Lookup portfolio id based on username and portfolio name
+SELECT pid from Portfolio where username=1038 and name = 'myportfolio';
+
+2. How much cash is available in a portfolio
+SELECT cashamt from Portfolio where pid='1038';
+
+
+--------------------
+Holdings:
+
+--------------------
+Symbols (mysql):
+1. Get all symbols 
+SELECT symbol from symbols;
+
+--------------------
+StockDaily(mysql):
+1. To check whether stock exits on a day
+select count(*) from StocksDaily where date=1151470800 and symbol='GOOG'
+
+--------------------
