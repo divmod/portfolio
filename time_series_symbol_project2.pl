@@ -32,12 +32,6 @@ $data_file="predict.txt";
 open(DAT, $data_file) || die("Could not open file!"); 
 @data= <DAT>;
 close(DAT);
-#foreach my $d(@data){
-#    print "----------\n";
-#    print $d;
-#    print "----------\n";
-#}
-
 
 $len = scalar(@data);
 #print "len: ".$len."\n";
@@ -54,12 +48,16 @@ while($i < $len){
 
 open (MYFILE, '> _plot.in');
 
+$d = $date;
 foreach my $p (@predictlines){
     #print "----------\n";
     #print $p;
     my($a1, $a2, $a3) = split(/\s+/,$p);
+    print MYFILE $d;
+    print MYFILE "\t";
     print MYFILE $a3;
    # print $a3;
     print MYFILE "\n";
+    $d = $d + (24*60*60);
 }
 close(MYFILE);
