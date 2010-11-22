@@ -81,7 +81,15 @@ print $covar{$symbol} / $var_mrkt,"\n";
 
 sub GetAvgMarket {
 	my ($from,$to) = @_;
-	eval{@cols=ExecSQL($dbuser,$dbpasswd,"select avg(close) from MarketDaily where datestamp>=$from and datestamp<=$to","COL");};
+	my $orasql = "select avg(close) from MarketDaily";
+	if ($from && $to) {
+		$orasql.= " where datestamp>=$from and datestamp<=$to";
+	}
+	else {
+		$orasql.= " where datestamp>=$from" if $from;
+		$orasql.= " where datestamp<=$to" if $to;
+	}
+	eval{@cols=ExecSQL($dbuser,$dbpasswd,$orasql,"COL");};
 	if ($@) {
 		return (undef,$@);
 	}
@@ -93,7 +101,15 @@ sub GetAvgMarket {
 
 sub GetVarMarket {
 	my ($from,$to) = @_;
-	eval{@cols=ExecSQL($dbuser,$dbpasswd,"select variance(close) from MarketDaily where datestamp>=$from and datestamp<=$to","COL");};
+	my $orasql = "select variance(close) from MarketDaily";
+	if ($from && $to) {
+		$orasql.= " where datestamp>=$from and datestamp<=$to";
+	}
+	else {
+		$orasql.= " where datestamp>=$from" if $from;
+		$orasql.= " where datestamp<=$to" if $to;
+	}
+	eval{@cols=ExecSQL($dbuser,$dbpasswd,$orasql,"COL");};
 	if ($@) {
 		return (undef,$@);
 	}
@@ -105,8 +121,17 @@ sub GetVarMarket {
 
 sub GetDevMarket {
 	my ($from,$to,$avg_mrkt) = @_;
-	eval{@cols=ExecSQL($dbuser,$dbpasswd,"select avg((close) - $avg_mrkt) from MarketDaily where datestamp>=$from and datestamp<=$to","COL");};
-	if ($@) {
+	my $orasql = "select avg(close - $avg_mrkt) from MarketDaily";
+	if ($from && $to) {
+		$orasql.= " where datestamp>=$from and datestamp<=$to";
+	}
+	else {
+		$orasql.= " where datestamp>=$from" if $from;
+		$orasql.= " where datestamp<=$to" if $to;
+	}
+#	eval{@cols=ExecSQL($dbuser,$dbpasswd,"select avg((close) - $avg_mrkt) from MarketDaily where datestamp>=$from and datestamp<=$to","COL");};
+	eval{@cols=ExecSQL($dbuser,$dbpasswd,$orasql,"COL");};
+if ($@) {
 		return (undef,$@);
 	}
 	else {

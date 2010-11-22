@@ -63,13 +63,13 @@ for ($i = 0, $c='a'; $i < $size-1; $i++, $c=chr(ord($c)+1) ) {
 	$closeclause .= "$c\.close + ";
 	$fromclause .= "StocksDaily as $c, ";
 	$symbolsclause .= "$c\.symbol = '$symbolist[$i]' and ";
-	$dateclause .= "$c\.date=";
+	$dateclause .= "$c\.date=".chr(ord($c)+1)."\.date and ";
 	$symbols .= "symbol='$symbolist[$i]' or ";
 }
 $closeclause .= "$c\.close";
 $fromclause .= "StocksDaily as $c";
 $symbolsclause .= "$c\.symbol = '$symbolist[$i]' and ";
-$dateclause .= "$c\.date";
+#$dateclause .= "$c\.date";
 $symbols .= "symbol='$symbolist[$i]'";
 
 print "select $c\.date, ";
@@ -93,7 +93,7 @@ push @fields, "volume" if $vol;
 $sql = "select ".join(",",@fields).", ($closeclause) from ";
 $sql .= $fromclause." where ".$symbolsclause.$dateclause;
 #$sql.= " where $symbols";
-$sql.= " and $c\.date>=$from" if $from;
+$sql.= "$c\.date>=$from" if $from;
 $sql.= " and $c\.date<=$to" if $to;
 $sql.= " order by $c\.date";
 
