@@ -89,7 +89,7 @@ open(FILE, ">>_plot.in");
 
 foreach $row(@newdata) {
 	$printrow = join("	", @{$row});
-	print "$printrow\n";
+	print FILE "$printrow\n";
 }
 close(FILE);
 
