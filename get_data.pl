@@ -89,7 +89,8 @@ open(FILE, ">>_plot.in");
 
 foreach $row(@newdata) {
 	$printrow = join("	", @{$row});
-	print FILE "$printrow\n";
+	print FILE "$printrow\n" if $plot;
+	print "$printrow\n" if not $plot;
 }
 close(FILE);
 
