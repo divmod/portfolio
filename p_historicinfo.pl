@@ -52,7 +52,8 @@ print start_form(-name=>'StockHistory'),
 if (param('postrun')) {
 	my $pid = param('pid');
 	my $period = param('period');
-	my $enddate = param('todate').' 05:00:00 GMT';
+#	my $enddate = param('todate').' 05:00:00 GMT';
+	my $enddate = param('todate').' 00:00:00 GMT';
 	my $fromdate;
 	my $todate = parsedate($enddate);
 

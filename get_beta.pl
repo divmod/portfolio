@@ -32,8 +32,8 @@ $s1=$symbol;
 $sql = "select count(*),avg(close),std(close) from StocksDaily where symbol='$symbol'";
 $sql.= " and date>=$from" if $from;
 $sql.= " and date<=$to" if $to;
-#    print STDERR $sql, "\n";
-($count, $avg, $std) =   split(/\s+/, `mysql --batch --silent --user=$user --password=$pass --database=$db --execute=\"$sql\"`);
+print $sql, "\n";
+($count, $avg_stock, $std) =   split(/\s+/, `mysql --batch --silent --user=$user --password=$pass --database=$db --execute=\"$sql\"`);
 
 ($avg_mrkt, $error) = GetAvgMarket($from,$to);
 if ($error) {
@@ -59,7 +59,7 @@ print "Average standard deviation of the market: ".$avgdev_mrkt,"\n";
 
 #skip this pair if there isn't enough data
 
-#    print STDERR $count,"\n";
+print $count,"\n";
 
 if ($count<30) { # not enough data
 	$covar{$symbol}='NODAT';
@@ -67,18 +67,60 @@ if ($count<30) { # not enough data
 
 #otherwise get the covariance
 
-	$sql = "select (avg((close - $avg))*$avgdev_mrkt) from StocksDaily where symbol='$symbol'";
-	$sql.= " and date>=$from" if $from;
-	$sql.= " and date<=$to" if $to;
-#      print STDERR $sql, "\n";
-	($covar{$symbol}) =  split(/\s+/, `mysql --batch --silent --user=$user --password=$pass --database=$db --execute=\"$sql\"`);
+#covariance of stock, market
+# (sum(stock-avg_stock) * market*avg_market) / n
+#
+# in order to do this:
+# get n days from stockdaily and marketdaily
+# 
+
+	$sql_my = "select close from StocksDaily where symbol='$symbol'";
+	$sql_my .= " and date>=$from" if $from;
+	$sql_my .= " and date<=$to" if $to;
+	$sql_my .= " order by date";
+	print $sql_my,"\n";
+
+	@stocks = `mysql --batch --silent --user=$user --password=$pass --database=$db --execute=\"$sql_my\"`;
+
+	@markets = GetMarketCloses($from,$to);
+
+	for ($i = 0; $i < $count; $i++) {
+		$sum += (($stocks[$i]-$avg_stock)*($markets[$i]-$avg_mrkt));
+	}
+
+	$covar = $sum / $count;
+
+#	$sql = "select (avg((close - $avg))*$avgdev_mrkt) from StocksDaily where symbol='$symbol'";
+#	$sql.= " and date>=$from" if $from;
+#	$sql.= " and date<=$to" if $to;
+#  print $sql, "\n";
+#	($covar{$symbol}) =  split(/\s+/, `mysql --batch --silent --user=$user --password=$pass --database=$db --execute=\"$sql\"`);
 }
 
+
 print "Beta of the market and $symbol: ";
-print $covar{$symbol} / $var_mrkt,"\n";
+	print $covar / $var_mrkt,"\n";
 
 #end of script output
 
+	sub GetMarketCloses {
+		my ($from,$to) = @_;
+		my $sql_ora = "select close from MarketDaily";
+		if ($from && $to) {
+			$sql_ora.= " where datestamp>=$from and datestamp<=$to";
+		}
+		else {
+			$sql_ora.= " where datestamp>=$from" if $from;
+			$sql_ora.= " where datestamp<=$to" if $to;
+		}
+		eval{@cols=ExecSQL($dbuser,$dbpasswd,$sql_ora,"COL");};
+		if ($@) {
+			return (undef,$@);
+		}
+		else {
+			return (@cols);
+		}
+	}
 
 sub GetAvgMarket {
 	my ($from,$to) = @_;
@@ -122,7 +164,7 @@ sub GetVarMarket {
 
 sub GetDevMarket {
 	my ($from,$to,$avg_mrkt) = @_;
-	my $orasql = "select avg(close - $avg_mrkt) from MarketDaily";
+	my $orasql = "select stddev(close) from MarketDaily";
 	if ($from && $to) {
 		$orasql.= " where datestamp>=$from and datestamp<=$to";
 	}
@@ -132,7 +174,7 @@ sub GetDevMarket {
 	}
 #	eval{@cols=ExecSQL($dbuser,$dbpasswd,"select avg((close) - $avg_mrkt) from MarketDaily where datestamp>=$from and datestamp<=$to","COL");};
 	eval{@cols=ExecSQL($dbuser,$dbpasswd,$orasql,"COL");};
-if ($@) {
+	if ($@) {
 		return (undef,$@);
 	}
 	else {
