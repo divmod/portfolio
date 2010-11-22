@@ -43,6 +43,13 @@ while ($symbol=shift) {
 }
 $size = scalar @symbolist;
 
+#select t.date, t.close + a.close 
+#from StocksDaily as t, StocksDaily as a 
+#where t.symbol='GOOG' and a.symbol='GOOG' 
+#and t.date=a.date;
+
+
+
 # select t.date, 
 # t.close, a.close 
 # from StocksDaily as t, StocksDaily as a 
@@ -52,7 +59,8 @@ $size = scalar @symbolist;
 #for ($i=26, $c='a' ; $i ; $i--, $c=chr(ord($c)+1) ) { printf("$c\n"); }
 
 for ($i = 0, $c='a'; $i < $size-1; $i++, $c=chr(ord($c)+1) ) {
-	$closeclause .= "$c\.close, ";
+#	$closeclause .= "$c\.close, ";
+	$closeclause .= "$c\.close + ";
 	$fromclause .= "StocksDaily as $c, ";
 	$symbolsclause .= "$c\.symbol = '$symbolist[$i]' and ";
 	$dateclause .= "$c\.date=";
@@ -65,12 +73,15 @@ $dateclause .= "$c\.date";
 $symbols .= "symbol='$symbolist[$i]'";
 
 print "select $c\.date, ";
+#print "sum(";
 print $closeclause;
+#print ")";
 print " from ";
 print $fromclause;
 print " where ";
 print $symbolsclause;
 print $dateclause;
+print "\n";
 
 push @fields, "$c\.date" if !$nodate;
 push @fields, "open" if $open;
@@ -79,7 +90,7 @@ push @fields, "low" if $low;
 #push @fields, "close" if $close;
 push @fields, "volume" if $vol;
 
-$sql = "select ".join(",",@fields).", $closeclause from ";
+$sql = "select ".join(",",@fields).", ($closeclause) from ";
 $sql .= $fromclause." where ".$symbolsclause.$dateclause;
 #$sql.= " where $symbols";
 $sql.= " and $c\.date>=$from" if $from;

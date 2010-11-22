@@ -92,7 +92,7 @@ if (param('postrun')) {
 #	system './get_data.pl --close $symbol --plot';
 #	open(my $STOCK, "./get_data.pl --close $symbol --plot |");
 
-	GraphAndPrint('_plot.in',@stocks);
+	GraphAndPrint('_plot.in');
 
 	print $cgi->end_html();
 
@@ -102,16 +102,17 @@ if (param('postrun')) {
 
 sub GraphAndPrint
 {
-	my ($name,@stocks) = @_;
+	my ($name) = @_;
 	my ($graphfile)="$name.png";
 
-	print "<b>Graph</b><p><img src =\"" . GnuPlot($name,$graphfile,@stocks) ."\"><p>\n";
+	print "<b>Graph</b><p><img src =\"" . GnuPlot($name,$graphfile) ."\"><p>\n";
 
 	print "<b>Data</b><p><pre>";
 	print "Unix Time";
-	for (my $i = 0; $i < (scalar @stocks); $i++) {
-		print "\t$stocks[$i]";
-	}
+#	for (my $i = 0; $i < (scalar @stocks); $i++) {
+#		print "\t$stocks[$i]";
+#	}
+	print "\tPortfolio Value";
 	print "\n";
 	open (FILE,$name);
 	while (<FILE>) { 
@@ -125,7 +126,7 @@ sub GraphAndPrint
 sub GnuPlot
 {
 
-	my ($datafile, $outputfile, @stocks)=@_;
+	my ($datafile, $outputfile)=@_;
 	my $i;
 	
 	open(GNUPLOT,"|gnuplot");
@@ -136,11 +137,12 @@ sub GnuPlot
 	print GNUPLOT "set format x \"%m/%d/%y\"\n";
 	print GNUPLOT "set xlabel 'Date'\n";
 	print GNUPLOT "set ylabel 'Price Per Unit'\n";
-	print GNUPLOT "plot ";
-	for ($i = 2; $i < scalar @stocks; $i++) {
-		print GNUPLOT "\"$datafile\" using 1:$i title '$stocks[$i - 2]' with linespoints, \\\n";
-	}
-	print GNUPLOT "\"$datafile\" using 1:$i title '$stocks[$i-2]' with linespoints\n";
+	print GNUPLOT "plot \"$datafile\" using 1:2 title 'Portfolio Value' with linespoints\n";
+#	print GNUPLOT "plot ";
+#	for ($i = 2; $i < scalar @stocks; $i++) {
+#		print GNUPLOT "\"$datafile\" using 1:$i title '$stocks[$i - 2]' with linespoints, \\\n";
+#	}
+#	print GNUPLOT "\"$datafile\" using 1:$i title '$stocks[$i-2]' with linespoints\n";
 	close(GNUPLOT);
 	return $outputfile;
 }
