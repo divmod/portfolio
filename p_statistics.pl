@@ -86,7 +86,7 @@ else {
 				"Field Type: ", popup_menu(-name=>'field',-values=>['open','high','low','close']),p,
 				p,
 				hidden(-name=>'postrun',-default=>['1']),
-				hidden(-name=>'stat_type',-default=>['$stat_type']),
+				hidden(-name=>'stat_type',-default=>['Standard Deviation/Coefficient of Variation']),
 				hidden(-name=>'pid',-default=>['$pid']),
 				submit,
 				end_form;

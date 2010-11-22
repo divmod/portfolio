@@ -5,6 +5,10 @@ use CGI qw(:standard);
 use URI::Escape;
 use Time::ParseDate;
 use Time::CTime;
+use DBI;
+$ENV{ORACLE_HOME}="/opt/oracle/product/11.2.0/db_1";
+$ENV{ORACLE_BASE}="/opt/oracle/product/11.2.0";
+$ENV{ORACLE_SID}="CS339";
 
 my $cgi = new CGI();
 
@@ -60,8 +64,10 @@ else {
 if (param('postrun')) {
 	my $symbol = param('symbol');
 	my $period = param('period');
-	my $enddate = param('todate').' 05:00:00 GMT';
-	my $startdate = param('fromdate').' 05:00:00 GMT';
+#	my $enddate = param('todate').' 05:00:00 GMT';
+#	my $startdate = param('fromdate').' 05:00:00 GMT';
+	my $enddate = param('todate');
+	my $startdate = param('fromdate');
 	my $field = param('field');
 	my $stat_type = param('stat_type');
 
@@ -75,13 +81,18 @@ if (param('postrun')) {
 		print "</pre>";
 	}
 	else {
-		my @results =	`./get_info.pl --from='$startdate' --to='$enddate' --field=$field --plot $symbol`;
+		my @results =	`./get_info2.pl --from='$startdate' --to='$enddate' --field=$field --plot $symbol`;
 
 		print "<pre>";
 #	print @results,p;
-		for ($i = 0; $i < 2; $i++) {
-			print "$results[$i]";
-		}
+#		for ($i = 0; $i < 3; $i++) {
+#			print "$results[$i]";
+#		}
+
+	foreach my $result (@results) {
+		print $result;
+	}
+
 		print "</pre>";
 	}
 	print $cgi->end_html();

@@ -45,8 +45,8 @@ if ($error) {
 	print $error,"\n";
 }
 
-#print "Average market: ".$avg_mrkt,"\n";
-#print "Variance market: ".$var_mrkt,"\n";
+print "Average of the market: ".$avg_mrkt,"\n";
+print "Variance of the market: ".$var_mrkt,"\n";
 
 (@res2, $error) = GetDevMarket($from,$to,$avg_mrkt);
 if ($error) {
@@ -55,7 +55,7 @@ if ($error) {
 
 $avgdev_mrkt = $res2[0];
 
-#print "Average dev market: ".$avgdev_mrkt,"\n";
+print "Average standard deviation of the market: ".$avgdev_mrkt,"\n";
 
 #skip this pair if there isn't enough data
 
@@ -74,6 +74,7 @@ if ($count<30) { # not enough data
 	($covar{$symbol}) =  split(/\s+/, `mysql --batch --silent --user=$user --password=$pass --database=$db --execute=\"$sql\"`);
 }
 
+print "Beta of the market and $symbol: ";
 print $covar{$symbol} / $var_mrkt,"\n";
 
 #end of script output
