@@ -1411,7 +1411,7 @@ sub StocksTable {
 			$out.="<tr><td>$symbol</td><td>$idate</td><td>$invest</td><td>$quantity</td><td>$stocksum</td>";
 			$out.="<td><a href = \"historicinfo.pl?symbol=$symbol\">Historic Data</a></td>";
 			$out.="<td><a href = \"statistics.pl?symbol=$symbol\">Statistical Analysis</a></td>";
-			$out.="<td><a href = \"predict.pl?symbol=$symbol\">Predict</a></td>";
+			$out.="<td><a href = \"predict_form.pl?symbol=$symbol\">Predict</a></td>";
 			$out.="<td><a href = \"portfolio.pl?act=sell&pid=$pid&stock=$symbol&bdate=$date\">Sell</a></td></tr>";
 		}
 
