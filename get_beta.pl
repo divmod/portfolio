@@ -32,7 +32,7 @@ $s1=$symbol;
 $sql = "select count(*),avg(close),std(close) from StocksDaily where symbol='$symbol'";
 $sql.= " and date>=$from" if $from;
 $sql.= " and date<=$to" if $to;
-print $sql, "\n";
+#print $sql, "\n";
 ($count, $avg_stock, $std) =   split(/\s+/, `mysql --batch --silent --user=$user --password=$pass --database=$db --execute=\"$sql\"`);
 
 ($avg_mrkt, $error) = GetAvgMarket($from,$to);
@@ -45,8 +45,8 @@ if ($error) {
 	print $error,"\n";
 }
 
-print "Average of the market: ".$avg_mrkt,"\n";
-print "Variance of the market: ".$var_mrkt,"\n";
+#print "Average of the market: ".$avg_mrkt,"\n";
+#print "Variance of the market: ".$var_mrkt,"\n";
 
 (@res2, $error) = GetDevMarket($from,$to,$avg_mrkt);
 if ($error) {
@@ -55,11 +55,11 @@ if ($error) {
 
 $avgdev_mrkt = $res2[0];
 
-print "Average standard deviation of the market: ".$avgdev_mrkt,"\n";
+#print "Average standard deviation of the market: ".$avgdev_mrkt,"\n";
 
 #skip this pair if there isn't enough data
 
-print $count,"\n";
+#print $count,"\n";
 
 if ($count<30) { # not enough data
 	$covar{$symbol}='NODAT';
@@ -78,7 +78,7 @@ if ($count<30) { # not enough data
 	$sql_my .= " and date>=$from" if $from;
 	$sql_my .= " and date<=$to" if $to;
 	$sql_my .= " order by date";
-	print $sql_my,"\n";
+#	print $sql_my,"\n";
 
 	@stocks = `mysql --batch --silent --user=$user --password=$pass --database=$db --execute=\"$sql_my\"`;
 
@@ -98,7 +98,7 @@ if ($count<30) { # not enough data
 }
 
 
-print "Beta of the market and $symbol: ";
+print "Beta of the $symbol with the market: ";
 	print $covar / $var_mrkt,"\n";
 
 #end of script output
