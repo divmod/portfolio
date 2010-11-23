@@ -63,6 +63,10 @@ $avgdev_mrkt = $res2[0];
 
 if ($count<30) { # not enough data
 	$covar{$symbol}='NODAT';
+
+	print "There are not enough datapoints in the time range specified.\n";
+	print "The count of datapoints is: $count\n";
+	print "Please adjust the date range.\n";
 } else {
 
 #otherwise get the covariance
@@ -95,11 +99,11 @@ if ($count<30) { # not enough data
 #	$sql.= " and date<=$to" if $to;
 #  print $sql, "\n";
 #	($covar{$symbol}) =  split(/\s+/, `mysql --batch --silent --user=$user --password=$pass --database=$db --execute=\"$sql\"`);
-}
-
 
 print "Beta of the $symbol with the market: ";
 	print $covar / $var_mrkt,"\n";
+}
+
 
 #end of script output
 
