@@ -10,8 +10,8 @@ use DBI;
 
 my $dbuser="ikh831";
 my $dbpasswd="o29de7c3f";
-#my $dbuser="drp925";
-#my $dbpasswd="o3d7f737e";
+my $oracle_user="drp925";
+my $oracle_pass="o3d7f737e";
 #my $dbuser="jhb348";
 #my $dbpasswd="ob5e18c77";
 my @sqlinput=();
@@ -52,7 +52,8 @@ print start_form(-name=>'StockHistory'),
 if (param('postrun')) {
 	my $pid = param('pid');
 	my $period = param('period');
-	my $enddate = param('todate').' 05:00:00 GMT';
+#	my $enddate = param('todate').' 05:00:00 GMT';
+	my $enddate = param('todate').' 00:00:00 GMT';
 	my $fromdate;
 	my $todate = parsedate($enddate);
 
@@ -63,6 +64,16 @@ if (param('postrun')) {
 	if ($error2) {
 		print "Error in getting holdings from portfolio: $error2";
 	}
+
+	my @quantities;
+	my $quant;
+
+	foreach my $stock (@stocks) {
+		$quant = getQuantity($stock,$todate);
+		push (@quantities,$quant);
+	}
+
+	#print @quantities,p;
 
 	if ($period eq 'Day') {
 		$fromdate = parsedate($enddate) - (24 * 60 * 60);
@@ -92,7 +103,7 @@ if (param('postrun')) {
 #	system './get_data.pl --close $symbol --plot';
 #	open(my $STOCK, "./get_data.pl --close $symbol --plot |");
 
-	GraphAndPrint('_plot.in',@stocks);
+	GraphAndPrint('_plot.in');
 
 	print $cgi->end_html();
 
@@ -102,16 +113,17 @@ if (param('postrun')) {
 
 sub GraphAndPrint
 {
-	my ($name,@stocks) = @_;
+	my ($name) = @_;
 	my ($graphfile)="$name.png";
 
-	print "<b>Graph</b><p><img src =\"" . GnuPlot($name,$graphfile,@stocks) ."\"><p>\n";
+	print "<b>Graph</b><p><img src =\"" . GnuPlot($name,$graphfile) ."\"><p>\n";
 
 	print "<b>Data</b><p><pre>";
 	print "Unix Time";
-	for (my $i = 0; $i < (scalar @stocks); $i++) {
-		print "\t$stocks[$i]";
-	}
+#	for (my $i = 0; $i < (scalar @stocks); $i++) {
+#		print "\t$stocks[$i]";
+#	}
+	print "\tPortfolio Value";
 	print "\n";
 	open (FILE,$name);
 	while (<FILE>) { 
@@ -125,7 +137,7 @@ sub GraphAndPrint
 sub GnuPlot
 {
 
-	my ($datafile, $outputfile, @stocks)=@_;
+	my ($datafile, $outputfile)=@_;
 	my $i;
 	
 	open(GNUPLOT,"|gnuplot");
@@ -135,14 +147,27 @@ sub GnuPlot
 	print GNUPLOT "set timefmt \"%s\"\n";
 	print GNUPLOT "set format x \"%m/%d/%y\"\n";
 	print GNUPLOT "set xlabel 'Date'\n";
-	print GNUPLOT "set ylabel 'Price Per Unit'\n";
-	print GNUPLOT "plot ";
-	for ($i = 2; $i < scalar @stocks; $i++) {
-		print GNUPLOT "\"$datafile\" using 1:$i title '$stocks[$i - 2]' with linespoints, \\\n";
-	}
-	print GNUPLOT "\"$datafile\" using 1:$i title '$stocks[$i-2]' with linespoints\n";
+	print GNUPLOT "set ylabel 'Price'\n";
+	print GNUPLOT "plot \"$datafile\" using 1:2 title 'Portfolio Value' with linespoints\n";
+#	print GNUPLOT "plot ";
+#	for ($i = 2; $i < scalar @stocks; $i++) {
+#		print GNUPLOT "\"$datafile\" using 1:$i title '$stocks[$i - 2]' with linespoints, \\\n";
+#	}
+#	print GNUPLOT "\"$datafile\" using 1:$i title '$stocks[$i-2]' with linespoints\n";
 	close(GNUPLOT);
 	return $outputfile;
+}
+
+sub getQuantity{
+  my ($sym, $date)=@_;
+	my @col;
+	eval { @col=ExecSQL($oracle_user,$oracle_pass,"select sum(quantity) from Holdings where datestamp <= ? and symbol=?",'COL',$date, $sym); };
+	if($@){
+		return (undef, $@);
+	}
+	else{
+		return ($col[0]);
+	}
 }
 
 sub PidToPortfolioName {

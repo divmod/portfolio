@@ -9,7 +9,6 @@ $pass='cs339';
 $db='cs339';
 
 $close=1;
-
 $field='close';
 
 &GetOptions( "field=s" => \$field,
@@ -19,10 +18,12 @@ $field='close';
 if (defined $from) { $from=parsedate($from);}
 if (defined $to) { $to=parsedate($to); }
 
-
 $#ARGV>=0 or die "usage: get_info.pl [--field=field] [--from=date] [--to=date] SYMBOL+\n";
 
-print join("\t","symbol","field","num","mean","std","min","max","cov"),"\n";
+
+print "<table><tr><td>";
+print join("</td><td>","symbol","field","num","mean","std","min","max","cov"),"\n";
+print "</td></tr>";
 
 while ($symbol=shift) {
   
@@ -35,8 +36,11 @@ while ($symbol=shift) {
   $output=`mysql --batch --silent --user=$user --password=$pass --database=$db --execute=\"$sql\"`;
 
   ($n,$mean,$std,$min,$max)=split(/\s+/,$output);
-
-  print join("\t",$symbol,$field, $n, $mean, $std, $min, $max, $std/$mean),"\n";
+print "<tr><td>";
+  print join("</td><td>",$symbol,$field, $n, $mean, $std, $min, $max, $std/$mean),"\n";
+	print "</td></tr>";
 }
+
+print "</table>";
 
 

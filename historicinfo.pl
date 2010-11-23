@@ -6,6 +6,11 @@ use URI::Escape;
 use Time::ParseDate;
 use Time::CTime;
 
+$ENV{ORACLE_HOME}="/opt/oracle/product/11.2.0/db_1";
+$ENV{ORACLE_BASE}="/opt/oracle/product/11.2.0";
+$ENV{ORACLE_SID}="CS339";
+
+
 my $cgi = new CGI();
 
 print "Cache-Control: no-cache\n";
@@ -38,7 +43,7 @@ print start_form(-name=>'StockHistory'),
 if (param('postrun')) {
 	my $symbol = param('symbol');
 	my $period = param('period');
-	my $enddate = param('todate').' 05:00:00 GMT';
+	my $enddate = param('todate').' 00:00:00 GMT';
 
 	my $fromdate;
 	my $todate = parsedate($enddate);

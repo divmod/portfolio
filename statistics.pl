@@ -5,6 +5,10 @@ use CGI qw(:standard);
 use URI::Escape;
 use Time::ParseDate;
 use Time::CTime;
+use DBI;
+$ENV{ORACLE_HOME}="/opt/oracle/product/11.2.0/db_1";
+$ENV{ORACLE_BASE}="/opt/oracle/product/11.2.0";
+$ENV{ORACLE_SID}="CS339";
 
 my $cgi = new CGI();
 
@@ -21,35 +25,76 @@ print "<head><title>Show Statistical Analysis of Symbol</title></head>";
 #my $fromdate = param('fromdate');
 my $symbol = param('symbol');
 
-print start_form(-name=>'analysis'),
-			h2('Statistical Analysis of Symbol ', $symbol),
-			"From Date (mm/dd/yyyy): ", textfield(-name=>'fromdate',default=>'09/07/1984'),p,
-			"To Date (mm/dd/yyyy): ", textfield(-name=>'todate',default=>'06/30/2006'),p,
-			"Field Type: ", popup_menu(-name=>'field',-values=>['open','high','low','close']),p,
-			p,
-			hidden(-name=>'postrun',-default=>['1']),
+my $stat_type = param('stat_type');
+print start_form(-name=>'selectstat'),
+			h2('Statistical Analysis of Stock ', $symbol),
+			"Select Statistic Type: ",
+			radio_group(-name=>'stat_type',-values=>['Standard Deviation/Coefficient of Variation','Beta'],
+					-default=>'Standard Deviation/Coefficient of Variation'),
 			hidden(-name=>'symbol',-default=>['$symbol']),
-			submit,
+			submit('typebutton','Change'),
 			end_form;
+
+if ($stat_type eq 'Beta') {
+
+	print start_form(-name=>'analysis'),
+				"From Date (mm/dd/yyyy): ", textfield(-name=>'fromdate',default=>'09/07/1984'),p,
+				"To Date (mm/dd/yyyy): ", textfield(-name=>'todate',default=>'06/30/2006'),p,
+				p,
+				hidden(-name=>'postrun',-default=>['1']),
+				hidden(-name=>'symbol',-default=>['$symbol']),
+				hidden(-name=>'stat_type',-default=>['$stat_type']),
+				submit('betasubmit','Submit'),
+				end_form;
+}
+else {
+	print start_form(-name=>'analysis'),
+#			h2('Statistical Analysis of Stock ', $symbol),
+				"From Date (mm/dd/yyyy): ", textfield(-name=>'fromdate',default=>'09/07/1984'),p,
+				"To Date (mm/dd/yyyy): ", textfield(-name=>'todate',default=>'06/30/2006'),p,
+				"Field Type: ", popup_menu(-name=>'field',-values=>['open','high','low','close']),p,
+				p,
+				hidden(-name=>'postrun',-default=>['1']),
+				hidden(-name=>'symbol',-default=>['$symbol']),
+				hidden(-name=>'stat_type',-default=>['$stat_type']),
+				submit('submitbutton','Submit'),
+				end_form;
+}
 
 if (param('postrun')) {
 	my $symbol = param('symbol');
 	my $period = param('period');
-	my $enddate = param('todate').' 05:00:00 GMT';
-	my $startdate = param('fromdate').' 05:00:00 GMT';
+#	my $enddate = param('todate').' 05:00:00 GMT';
+#	my $startdate = param('fromdate').' 05:00:00 GMT';
+	my $enddate = param('todate');
+	my $startdate = param('fromdate');
 	my $field = param('field');
+	my $stat_type = param('stat_type');
 
 	my $i;
-	my @results =	`./get_info.pl --from='$startdate' --to='$enddate' --field=$field --plot $symbol`;
 
 
-#	print @results,p;
-	print "<table>";
-	for ($i = 0; $i < 2; $i++) {
-		print "<tr><td>$results[$i]</td></tr>";
+	if ($stat_type eq 'Beta') {
+		my @beta = `./get_beta.pl --from='$startdate' --to='$enddate' $symbol`;
+		print "<pre>";
+		print @beta;
+		print "</pre>";
 	}
-	print "</table>";
+	else {
+		my @results =	`./get_info2.pl --from='$startdate' --to='$enddate' --field=$field --plot $symbol`;
 
+		print "<pre>";
+#	print @results,p;
+#		for ($i = 0; $i < 3; $i++) {
+#			print "$results[$i]";
+#		}
+
+	foreach my $result (@results) {
+		print $result;
+	}
+
+		print "</pre>";
+	}
 	print $cgi->end_html();
 
 	exit;

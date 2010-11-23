@@ -59,16 +59,14 @@ $ENV{ORACLE_SID}="CS339";
 # you need to override these for access to your database
 #
 
-my $dbuser="drp925";
-my $dbpasswd="o3d7f737e";
+#my $dbuser="drp925";
+#my $dbpasswd="o3d7f737e";
 #my $dbuser="jhb348";
 #my $dbpasswd="ob5e18c77";
 
-#my $dbuser="ikh831";
-#my $dbpasswd="o29de7c3f";
+my $dbuser="ikh831";
+my $dbpasswd="o29de7c3f";
 
-
-#
 # The session cookie will contain the user's name and password so that 
 # he doesn't have to type it again and again.
 #
@@ -226,18 +224,16 @@ if ($loginok) {
 if ($action eq "login") { 
 	if ($logincomplain) { 
 		print "Login failed.  Try again.<p>";
-
 	} 
 	if ($logincomplain or !param('loginrun')) { 
 		print start_form(-name=>'Login'),
-		      h2('Login to Portfolio Manager'),
-		      "Name:",textfield(-name=>'user'),	p,
-		      "Password:",password_field(-name=>'password'),p,
-		      hidden(-name=>'act',default=>['login']),
-		      hidden(-name=>'loginrun',default=>['1']),
-		      submit(-name=>'Login'),
-		      end_form;
-
+					h2('Login to Portfolio Manager'),
+					"Name:",textfield(-name=>'user'),	p,
+					"Password:",password_field(-name=>'password'),p,
+					hidden(-name=>'act',default=>['login']),
+					hidden(-name=>'loginrun',default=>['1']),
+					submit(-name=>'Login'),
+					end_form;
 	}
 }
 
@@ -400,7 +396,9 @@ if($action eq "buy"){
 		$pdate = $m."/".$d."/".$y." 00:00:00 GMT";
 		$date =  parsedate($pdate);
 		my($exists1, $error3) = StockExistsOnDateM($date, $stock);
+#my ($value, $ee) = test($stock);
 		my($exists2, $e) = StockExistsOnDateO($date, $stock);
+#print "exist2: ".$exists2;
 		if(!$exists1 && !$exists2){
 			print h2('This stock does not exist for the date entered. Try Again.');
 		}
@@ -448,6 +446,7 @@ if($action eq "buy"){
 
 	}#end postrun
 }#end action buy
+
 
 if($action eq "confirmBuy"){
 	topPanel();
@@ -513,7 +512,6 @@ if($action eq "confirmBuy"){
 		print "Portfolio cash not properly debited: $error3";
 	}
 }
-
 #Begin Joy Code Section#
 
 
@@ -529,7 +527,6 @@ if ($action eq "cashmgmt") {
 # Get the portfolios of the user
 #
 #print "Username is: $user";
-
 	topPanel();
 	my (@portfolios, $portfolioerror) = GetPortfolioNames($user);
 	if($portfolioerror){
@@ -946,6 +943,7 @@ sub GetPortfolioNames {
 
 #end Joy Code Section#
 
+#get closing price of the stock on based on the date from StockDaily
 #check if the stock exists in StockDaily
 sub StockExistsOnDateM{
 	my($date, $sym) = @_;
@@ -962,7 +960,6 @@ sub StockExistsOnDateM{
 
 #check if the stock exists in NewStocks
 sub StockExistsOnDateO{
-
 	my($date, $sym) = @_;
 #print "I am in Stock".$date."\n";
 #print "sym: ".$sym."\n";
@@ -1404,7 +1401,6 @@ sub BuyNHold {
 		else { return ($stockValue[0],$@) } ;
 	} else { return ($stockValue[0],$@) } ;
 }
-
 
 
 

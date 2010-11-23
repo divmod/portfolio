@@ -31,19 +31,17 @@ $to=0;
 $plot=0;
 
 &GetOptions( "nodate"=>\$nodate,
-             "open" => \$open,
-	     "high" => \$high,
-	     "low" => \$low,
-	     "close" => \$close,
-	     "vol" => \$vol,
-	     "from=s" => \$from,
-	     "to=s" => \$to,
-	     "plot" => \$plot);
+		"open" => \$open,
+		"high" => \$high,
+		"low" => \$low,
+		"close" => \$close,
+		"vol" => \$vol,
+		"from=s" => \$from,
+		"to=s" => \$to,
+		"plot" => \$plot);
 
 #if (defined $from) { $from=parsedate($from); }
 #if (defined $to) { $to=parsedate($to); }
-#if (defined $from) { $from=$from; }
-#if (defined $to) { $to=$to; }
 
 
 $#ARGV==0 or die "usage: get_data.pl [--open] [--high] [--low] [--close] [--vol] [--from=date] [--too=date] [--plot] SYMBOL\n";
@@ -85,7 +83,6 @@ $exec .= ">_plot.in" if $plot;
 
 system $exec;
 
-;
 
 
 @newdata = ExecSQL($oracle_user,$oracle_pass,$sql2) ;
@@ -127,15 +124,15 @@ close(FILE);
 # The rest assumes that the data will be forthcoming.
 #
 #
-                        my @data;
-                        my @ret;
-                        while (@data=$sth->fetchrow_array()) {
-                                push @ret, [@data];
-                        }
-                        $sth->finish();
-                        $dbh->disconnect();
-                        return @ret;
-                }
+	my @data;
+	my @ret;
+	while (@data=$sth->fetchrow_array()) {
+		push @ret, [@data];
+	}
+	$sth->finish();
+	$dbh->disconnect();
+	return @ret;
+}
 
 
 
@@ -148,5 +145,3 @@ close(FILE);
 #  STDIN->autoflush(1);
 #  <STDIN>;
 #}
-
-

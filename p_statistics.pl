@@ -30,7 +30,6 @@ my $dbpasswd="o29de7c3f";
 
 
 
-my $cgi = new CGI();
 
 print "Cache-Control: no-cache\n";
 print "Expires: Thu, 13 Mar 2003 07:12:13 GMT\n";  # ie, a long time ago
@@ -40,29 +39,76 @@ print "Content-Type: text/html\n\n";
 print "<head><title>Statistical Analysis of a Portfolio</title></head>";
 
 my $pid = param('pid');
+my $stat_type = param('stat_type');
 my ($pname, $error) = PidToPortfolioName($pid);
 if ($error) {
 	print "Error in Getting Portfolio Name: $error";
-
-#my $file = $cgi->param("uploadedfile");
-#my $file = "plot.dat";
-my $pid = param('pid');
-
-my ($pname, $error1) = PidToPortfolioName($pid);
-if ($error1) {
-	print $error1;
 }
 
-print start_form(-name=>'analysis'),
+print start_form(-name=>'selectstat'),
 			h2('Statistical Analysis of Portfolio ', $pname),
-			"From Date (mm/dd/yyyy): ", textfield(-name=>'fromdate',default=>'09/07/1984'),p,
-			"To Date (mm/dd/yyyy): ", textfield(-name=>'todate',default=>'06/30/2006'),p,
-			"Field Type: ", popup_menu(-name=>'field',-values=>['open','high','low','close']),p,
-			p,
-			hidden(-name=>'postrun',-default=>['1']),
+			"Select Statistic Type: ",
+			radio_group(-name=>'stat_type',-values=>['Standard Deviation/Coefficient of Variation','Covariance Matrix','Correlation Matrix'],
+					-default=>'Standard Deviation/Coefficient of Variation'),
 			hidden(-name=>'pid',-default=>['$pid']),
-			submit,
+			submit('typebutton','Change'),
 			end_form;
+
+if ($stat_type eq 'Standard Deviation/Coefficient of Variation') {
+	print start_form(-name=>'analysis'),
+				"From Date (mm/dd/yyyy): ", textfield(-name=>'fromdate',default=>'09/07/1984'),p,
+				"To Date (mm/dd/yyyy): ", textfield(-name=>'todate',default=>'06/30/2006'),p,
+				"Field Type: ", popup_menu(-name=>'field',-values=>['open','high','low','close']),p,
+				p,
+				hidden(-name=>'postrun',-default=>['1']),
+				hidden(-name=>'stat_type',-default=>['$stat_type']),
+				hidden(-name=>'pid',-default=>['$pid']),
+				submit,
+				end_form;
+}
+elsif ($stat_type eq 'Covariance Matrix' || $stat_type eq 'Correlation Matrix') {
+	print start_form(-name=>'analysis'),
+				"From Date (mm/dd/yyyy): ", textfield(-name=>'fromdate',default=>'09/07/1984'),p,
+				"To Date (mm/dd/yyyy): ", textfield(-name=>'todate',default=>'06/30/2006'),p,
+				"Field 1 Type: ", popup_menu(-name=>'field1',-values=>['open', 'high', 'low', 'close']),p,
+				"Field 2 Type: ", popup_menu(-name=>'field2',-values=>['open', 'high', 'low', 'close']),p,
+				p,
+				hidden(-name=>'postrun',-default=>['1']),
+				hidden(-name=>'stat_type',-default=>['$stat_type']),
+				hidden(-name=>'pid',-default=>['$pid']),
+				submit,
+				end_form;
+}
+else {
+	print start_form(-name=>'analysis'),
+				"From Date (mm/dd/yyyy): ", textfield(-name=>'fromdate',default=>'09/07/1984'),p,
+				"To Date (mm/dd/yyyy): ", textfield(-name=>'todate',default=>'06/30/2006'),p,
+				"Field Type: ", popup_menu(-name=>'field',-values=>['open','high','low','close']),p,
+				p,
+				hidden(-name=>'postrun',-default=>['1']),
+				hidden(-name=>'stat_type',-default=>['Standard Deviation/Coefficient of Variation']),
+				hidden(-name=>'pid',-default=>['$pid']),
+				submit,
+				end_form;
+
+}
+
+#print start_form(-name=>'analysis'),
+#			"From Date (mm/dd/yyyy): ", textfield(-name=>'fromdate',default=>'09/07/1984'),p,
+#			"To Date (mm/dd/yyyy): ", textfield(-name=>'todate',default=>'06/30/2006'),p,
+#			if ($stat_type eq 'Standard Deviation/Coefficient of Variation') {
+#				"Field Type: ", popup_menu(-name=>'field',-values=>['open','high','low','close']),p,
+#			}
+#			else {
+#				"Field 1 Type: ", popup_menu(-name=>'field1',-values=>['open', 'high', 'low', 'close']),p,
+#				"Field 2 Type: ", popup_menu(-name=>'field2',-values=>['open', 'high', 'low', 'close']),p,
+#			}
+#			p,
+#			hidden(-name=>'postrun',-default=>['1']),
+#			hidden(-name=>'stat_type',-default=>['$stat_type']),
+#			hidden(-name=>'pid',-default=>['$pid']),
+#			submit,
+#			end_form;
 
 if (param('postrun')) {
 	my $symbol = param('symbol');
@@ -71,13 +117,15 @@ if (param('postrun')) {
 	my $enddate = param('todate').' 05:00:00 GMT';
 	my $startdate = param('fromdate').' 05:00:00 GMT';
 	my $field = param('field');
+	my $field1 = param('field1');
+	my $field2 = param('field2');
 	my $fromdate = parsedate($startdate);
 	my $todate = parsedate($enddate);
 
-
+	my @matrix;
+	my @results;
 	my $i;
 	my $stockslist;
-	my $count;
 
 	my (@stocks, $error2) = HoldingsFromPid($pid);
 	if ($error2) {
@@ -87,21 +135,40 @@ if (param('postrun')) {
 #foreach in stocks, join it as a string to put below
 	foreach my $stock (@stocks) {
 		$stockslist.=$stock." ";
-		$count++;
 	}
+
+	my $count = scalar @stocks;
 
 #	print $stockslist;
 
 #	my @results =	`./get_info.pl --from='$fromdate' --to='$todate' --field=$field --plot $stockslist`;
-	my @results = `./get_info.pl --from='$startdate' --to='$enddate' --fields=$field --plot $stockslist`;  
+	if ($stat_type eq 'Standard Deviation/Coefficient of Variation') {
+		@results = `./get_info.pl --from='$startdate' --to='$enddate' --field=$field --plot $stockslist`;
+		for ($i = 0; $i < $count; $i++) {
+			print "$results[$i]";
+		}
+		print "</table>";
+	}
+	else {
+		if ($stat_type eq 'Covariance Matrix') {
+			@matrix = `./get_covar.pl --from='$startdate' --to='$enddate' --field1='$field1' --field2='$field2' $stockslist`;
+		}
+		else {
+			@matrix = `./get_covar.pl --from='$startdate' --to='$enddate' --field1='$field1' --field2='$field2' --corrcoeff $stockslist`;
+		}
 
+		print "<table>";
+		print @matrix;
+		print "</table>";
+	}
+
+	print p;
 
 #	print @results,p;
-	print "<table>";
-	for (my $i = 0; $i < $count; $i++) {
-		print "<tr><td>$results[$i]</td></tr>";
-	}
-	print "</table>";
+#	for ($i = 0; $i < $count; $i++) {
+#		print "$results[$i]";
+#	}
+#	print "</table>";
 
 #
 # Generate debugging output if anything is enabled.
@@ -158,7 +225,6 @@ sub HoldingsFromPid {
 	}
 }
 
-
 sub ExecSQL {
 	my ($user, $passwd, $querystring, $type, @fill) =@_;
 	if ($show_sqlinput) { 
@@ -172,7 +238,6 @@ sub ExecSQL {
 		die "Can't connect to database because of ".$DBI::errstr;
 	}
 	my $sth = $dbh->prepare($querystring);
-
 	if (not $sth) { 
 #
 # If prepare failed, then record reason to sqloutput and then die
@@ -220,7 +285,6 @@ sub ExecSQL {
 	$dbh->disconnect();
 	return @ret;
 }
-
 
 sub MakeTable {
 	my ($type,$headerlistref,@list)=@_;
