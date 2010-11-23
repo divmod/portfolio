@@ -1,4 +1,5 @@
 #!/usr/bin/perl -w 
+use POSIX;
 
 $#ARGV==3 or die "usage: shannon_ratchet.pl symbol initialcash tradingcost fromdate\n";
 
@@ -70,13 +71,13 @@ while (<STOCK>) {
 close(STOCK);
 
 
-
-
+$quantity = ceil($laststock);
+$laststockvalue = $laststock*$stockprice;
 
 		
 #print "Invested:                        \t$initialcash\n";
 #print "Days:                            \t$day\n";
-print $lasttotal;
+print "$lasttotal $laststockvalue $lastcash $quantity";
 #return $lasttotal;
 		
 

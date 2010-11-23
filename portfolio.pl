@@ -278,11 +278,17 @@ if($action eq "portfoliosummary") {
 	my $pid = param('pid');
 	my $strategy = param('strategy');
 	my $cash = param('cash');
+	my $tstrategy; 
 	my ($table,$error) = StocksTable($pid,$strategy,$cash);
 	if ($error) {
 		print "Can't display your stocks because: $error";
 	} else {
-		print "<h2>Your Stocks for Portfolio $pid</h2>$table";
+		if ($strategy eq "a" ) {
+			$tstrategy = "buy n hold";
+		} elsif ($strategy eq "b") {
+			$tstrategy = "shannon rachet";
+		}
+		print "<h2>Your Stocks for Portfolio $pid using trading strategy: $tstrategy</h2>$table";
 	}
 }
 # CREATE
@@ -1276,61 +1282,16 @@ sub ExecSQL {
 }
 
 
-#IKH - 
-sub PortfoliosTable {
+
+sub UserTable {
 	my @rows;
-	my $out = "";
-	eval { @rows = ExecSQL($dbuser, $dbpasswd, "select name, cashamt, strategy, pid from portfolio where username = '$user'"); };
-	if ($@) {
+	eval { @rows = ExecSQL($dbuser, $dbpasswd, "select name from Users order by name"); }; 
+	if ($@) { 
 		return (undef,$@);
 	} else {
-		$out.="<table border><tr><td>NAME</td><td>CASH</td><td>STRATEGY</td><td>VALUE</td></tr>";
-
-		foreach my $row (@rows) {
-			my ($name, $cash, $strategy, $pid) = @{$row};
-			my ($strategyname, $portfoliosum)=("",$cash);
-			my @holdingrows;
-
-			eval { @holdingrows = ExecSQL($dbuser, $dbpasswd, "select datestamp, symbol, iinvest, quantity from holdings where id = '$pid'"); };
-			if ($@) {
-				return (undef,$@);
-			} else {
-				foreach my $holdingrow (@holdingrows) {
-					my ($date, $symbol, $invest, $quantity) = @{$holdingrow};
-
-
-					if($strategy eq "a"){
-						$strategyname = "buy n hold";
-						my ($stocksum,$error) = BuyNHold($symbol,$quantity);
-						if ($error) {
-							print "Can't display portfolio value  because: $error";
-						} else {
-							$portfoliosum += $stocksum;
-						}
-					}
-
-					elsif ($strategy eq "b") {
-						$portfoliosum += `./shannon_ratchet.pl '$symbol' $invest 0 '$date'`;
-						$strategyname = "shannon ratchet";
-					}
-				} 
-			} 
-			$out.="<tr><td><a href = \"portfolio.pl?act=portfoliosummary&pid=$pid&strategy=$strategy&cash=$cash\">$name</a></td><td>$cash</td><td>$strategyname</td><td>$portfoliosum</td></tr>";
-		}
-		$out.="</table>";
-		return $out;
-	}
-
-	sub UserTable {
-		my @rows;
-		eval { @rows = ExecSQL($dbuser, $dbpasswd, "select name from Users order by name"); }; 
-		if ($@) { 
-			return (undef,$@);
-		} else {
-			return (MakeTable("2D",
-						["Name"],
-						@rows),$@);
-		}
+		return (MakeTable("2D",
+					["Name"],
+					@rows),$@);
 	}
 }
 #IKH - 
@@ -1346,6 +1307,7 @@ sub PortfoliosTable {
 		foreach my $row (@rows) {
 			my ($name, $cash, $strategy, $pid) = @{$row};
 			my ($strategyname, $portfoliosum)=("",$cash);
+			my $paramcash = $cash;
 			my @holdingrows;
 
 			eval { @holdingrows = ExecSQL($dbuser, $dbpasswd, "select datestamp, symbol, iinvest, quantity from holdings where id = '$pid'"); };
@@ -1367,12 +1329,15 @@ sub PortfoliosTable {
 					}
 
 					elsif ($strategy eq "b") {
-						$portfoliosum += `./shannon_ratchet.pl '$symbol' $invest 0 '$date'`;
+						my $shannon_return = `./shannon_ratchet.pl '$symbol' $invest 0 '$date'`;
+						my($totalsum,$sum,$newcash,$quantity)= split(/ /, $shannon_return);
+						$portfoliosum += $totalsum;
+						$cash += $newcash;
 						$strategyname = "shannon ratchet";
 					}
 				} 
 			} 
-			$out.="<tr><td><a href = \"portfolio.pl?act=portfoliosummary&pid=$pid&strategy=$strategy&cash=$cash\">$name</a></td><td>$cash</td><td>$strategyname</td><td>$portfoliosum</td></tr>";
+			$out.="<tr><td><a href = \"portfolio.pl?act=portfoliosummary&pid=$pid&strategy=$strategy&cash=$paramcash\">$name</a></td><td>$cash</td><td>$strategyname</td><td>$portfoliosum</td></tr>";
 		}
 		$out.="</table>";
 		return $out;
@@ -1403,8 +1368,12 @@ sub StocksTable {
 				}
 			}
 			elsif ($strategy eq "b") {
-				$stocksum = `./shannon_ratchet.pl '$symbol' $invest 0 '$date'`;
-				$portfoliosum += $stocksum;
+				my $shannon_return = `./shannon_ratchet.pl '$symbol' $invest 0 '$date'`;
+				my($totalsum,$sum,$newcash,$newquantity)= split(/ /, $shannon_return);
+				$portfoliosum += $totalsum;
+				$cash += $newcash;
+				$quantity = $newquantity;
+				$stocksum = $sum;
 			}
 
 			my $idate = strftime("%m/%d/%Y", gmtime($date));
@@ -1419,7 +1388,7 @@ sub StocksTable {
 		$out.="<tr><td></td><td></td><td></td><td>TOTAL PORTFOLIO VALUE:</td><td>$portfoliosum</td></table>";
 		$out.="<h3><a href=\"portfolio.pl?act=buy&pid=$pid\">Buy Stock</a></h3>";
 		$out.="<h3><a href=\"p_statistics.pl?pid=$pid\">Analyze This Portfolio</a></h3>";
-		$out.="<h3><a href=\"p_predict.pl?pid=$pid\">Predict This Portfolio</a></h3>";
+		$out.="<h3><a href=\"p_predict_form.pl?pid=$pid\">Predict This Portfolio</a></h3>";
 		$out.="<h3><a href=\"p_historicinfo.pl?pid=$pid\">Past Performance of This Portfolio</a></h3>";
 		return $out;
 	}
