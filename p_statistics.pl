@@ -169,6 +169,7 @@ if (param('postrun')) {
 #		print "$results[$i]";
 #	}
 #	print "</table>";
+
 #
 # Generate debugging output if anything is enabled.
 #
@@ -199,6 +200,7 @@ if (param('postrun')) {
 	exit;
 
 }
+
 sub PidToPortfolioName {
 #	my $pid = @_;
 	my @col;
@@ -237,6 +239,9 @@ sub ExecSQL {
 	}
 	my $sth = $dbh->prepare($querystring);
 	if (not $sth) { 
+#
+# If prepare failed, then record reason to sqloutput and then die
+#
 		if ($show_sqloutput) { 
 			push @sqloutput, "<b>ERROR: Can't prepare '$querystring' because of ".$DBI::errstr."</b>";
 		}
@@ -244,7 +249,6 @@ sub ExecSQL {
 		$dbh->disconnect();
 		die $errstr;
 	}
-
 	if (not $sth->execute(@fill)) { 
 		if ($show_sqloutput) { 
 			push @sqloutput, "<b>ERROR: Can't execute '$querystring' with fill (".join(",",map {"'$_'"} @fill).") because of ".$DBI::errstr."</b>";
@@ -281,8 +285,6 @@ sub ExecSQL {
 	$dbh->disconnect();
 	return @ret;
 }
-
-
 
 sub MakeTable {
 	my ($type,$headerlistref,@list)=@_;

@@ -69,21 +69,14 @@ while (<STOCK>) {
 
 close(STOCK);
 
-$roi = 100.0*($lasttotal-$initialcash)/$initialcash;
-$roi_annual = $roi/($day/365.0);
-
-$roi_at = 100.0*($lasttotalaftertradecost-$initialcash)/$initialcash;
-$roi_at_annual = $roi_at/($day/365.0);
 
 
-#print "$symbol\t$day\t$roi\t$roi_annual\n";
+
 
 		
 #print "Invested:                        \t$initialcash\n";
 #print "Days:                            \t$day\n";
-#print "Total:                           \t$lasttotal (ROI=$roi % ROI-annual = $roi_annual %)\n";
-#print "Total-after \$$tradecost/day trade costs: \t$lasttotalaftertradecost (ROI=$roi_at % ROI-annual = $roi_at_annual %)\n";
 print $lasttotal;
-return $lasttotal;
+#return $lasttotal;
 		
 

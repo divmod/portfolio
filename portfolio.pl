@@ -70,7 +70,6 @@ my $dbpasswd="o29de7c3f";
 # The session cookie will contain the user's name and password so that 
 # he doesn't have to type it again and again.
 #
-# "MicroblogSession"=>"user/password"
 #
 # BOTH ARE UNENCRYPTED AND THE SCRIPT IS ALLOWED TO BE RUN OVER HTTP
 # THIS IS FOR ILLUSTRATION PURPOSES.  IN REALITY YOU WOULD ENCRYPT THE COOKIE
@@ -140,7 +139,8 @@ if ($action eq "login" || param('loginrun') || $action eq "users") {
 # Just a login screen request. Still, ignore any cookie that's there.
 #
 	}
-} else {
+}
+else {
 #
 # Not a login request or attempt.  Only let this past if
 # there is a cookie, and the cookie has the right user/password
@@ -241,73 +241,10 @@ if ($action eq "logout") {
 	print "<h2>You have been successfully logged out</h2>";
 }
 
-# QUERY
-#
-# Query is a "normal" form.
-#
-#
-#if ($action eq "query") {
-#  #
-#  # check to see if user can see this
-#  #
-#  if (!UserCan($user,"query-messages")) { 
-#    print h2('You do not have the required permissions to query messages.');
-#  } else {
-#    #
-#    # Generate the form
-#    # This is the part you will be extending
-#    #
-#    print start_form(-name=>'Query'),
-#      h2('Display blog entries'),
-#	"From: ", textfield(-name=>'from',-default=>'yesterday'),
-#	  "To: ", textfield(-name=>'to',-default=>'now'),
-#	    p, "By: ", textfield('by'), p,
-#	      hidden(-name=>'queryrun',default=>['1']),
-#		hidden(-name=>'act',default=>['query']),
-#		  submit,
-#		    end_form;
-#    #
-#    # if we have the hidden parameter queryrun, then we have
-#    # been invoked with data
-#    #
-#    if (param('queryrun')) {
-#      my $from=param('from');
-#      my $to=param('to');
-#      my $by=param('by');
-#      #
-#      # Run the query (note, you need to write MessageQuery!)
-#      # to actually use the parameters.  Right now it just returns all
-#      # the messages.
-#      #
-#      my ($mq,$error) = MessageQuery($from,$to,$by);
-#      if ($error) { 
-#	print "Can't query messages because: $error";
-#      } else {
-#	print $mq;
-#      }
-#    } else {
-#      #
-#      # If we haven't been invoked with parameters, then just
-#      # display a message summary.  You will update this to give
-#      # a tree display
-#      #
-#      my ($ms,$error)=MessageSummary();
-#      if ($error) { 
-#	print "Can't summarize messages because: $error";
-#      } else {
-#	print $ms;
-#      }
-#    }
-#  }
-#}
-
 ##############PORTFOLIO##################################
 if ($action eq "display") {
 #
-# Generate the form
-# This is the part you will be extending
 #   
-
 	topPanel();
 
 	my ($table,$error)=PortfoliosTable();
@@ -349,19 +286,19 @@ if($action eq "portfoliosummary") {
 if($action eq "create"){
 	topPanel();
 	print start_form(-name=>'Create'),
-				h2('Add Portfolio'),
-				"Portfolio Name:  ", textfield(-name=>'pname'),
-				p,
-				"Cash Amt:  ", textfield(-name=>'cashamt'),
-				p,
+	      h2('Add Portfolio'),
+	      "Portfolio Name:  ", textfield(-name=>'pname'),
+	      p,
+	      "Cash Amt:  ", textfield(-name=>'cashamt'),
+	      p,
 #	popup_menu(-name=>'strategy', -values=>['a', 'b', 'c'], -labels=>{'a' => 'buy n hold', 'b' => 'shannon rachet', 'c'=>'markov model'}, -default=>'a'), 
-				popup_menu(-name=>'strategy', -values=>['a', 'b'], -labels=>{'a' => 'buy n hold', 'b' => 'shannon rachet'}, -default=>'a'),
-				p,
-				hidden(-name=>'postrun',-default=>['1']),
-				hidden(-name=>'act',-default=>['create']), 
-				submit(-name=>'Submit'),
-				reset(),
-				end_form;
+	      popup_menu(-name=>'strategy', -values=>['a', 'b'], -labels=>{'a' => 'buy n hold', 'b' => 'shannon rachet'}, -default=>'a'),
+	      p,
+	      hidden(-name=>'postrun',-default=>['1']),
+	      hidden(-name=>'act',-default=>['create']), 
+	      submit(-name=>'Submit'),
+	      reset(),
+	      end_form;
 	if (param('postrun')) { 
 #my $by=$user;
 		my $pname=param('pname');
@@ -422,26 +359,26 @@ if($action eq "buy"){
 
 
 	print start_form(-name=>'Buy'),
-				h2('Buy Stock'),
-				p,
-				"Select a Stock ",
-				p,
-				scrolling_list(-name=>'stock', -values=>[@stocks],-size=>10),
-				p,
-				"Available Cash: ".$cashamt,
-				p,
-				"Enter Investment Amount:  ", textfield(-name=>'iamt'),
-				p,
-				"Enter Date Purchased:  ", 
-				textfield(-name=>'month',-size=>2), "/",
-				textfield(-name=>'day',-size=>2),"/",
-				textfield(-name=>'year',-size=>4),"(mm/dd/yyyy)",
-				p,
-				hidden(-name=>'postrun',-default=>['1']),
-				hidden(-name=>'pid',-default=>[$pid]),
-				hidden(-name=>'act',-default=>['buy']),
-				submit(-name=>'Buy'), reset(),
-				end_form;
+	      h2('Buy Stock'),
+	      p,
+	      "Select a Stock ",
+	      p,
+	      scrolling_list(-name=>'stock', -values=>[@stocks],-size=>10),
+	      p,
+	      "Available Cash: ".$cashamt,
+	      p,
+	      "Enter Investment Amount:  ", textfield(-name=>'iamt'),
+	      p,
+	      "Enter Date Purchased:  ", 
+	      textfield(-name=>'month',-size=>2), "/",
+	      textfield(-name=>'day',-size=>2),"/",
+	      textfield(-name=>'year',-size=>4),"(mm/dd/yyyy)",
+	      p,
+	      hidden(-name=>'postrun',-default=>['1']),
+	      hidden(-name=>'pid',-default=>[$pid]),
+	      hidden(-name=>'act',-default=>['buy']),
+	      submit(-name=>'Buy'), reset(),
+	      end_form;
 
 
 	if (param('postrun')){
@@ -450,7 +387,7 @@ if($action eq "buy"){
 		$m = param('month');
 		$d = param('day');
 		$y = param('year');
-		$pdate = $m."/".$d."/".$y." 05:00:00 GMT";
+		$pdate = $m."/".$d."/".$y." 00:00:00 GMT";
 		$date =  parsedate($pdate);
 		my($exists1, $error3) = StockExistsOnDateM($date, $stock);
 #my ($value, $ee) = test($stock);
@@ -458,38 +395,46 @@ if($action eq "buy"){
 #print "exist2: ".$exists2;
 		if(!$exists1 && !$exists2){
 			print h2('This stock does not exist for the date entered. Try Again.');
-#print "<h3><a href=\"portfolio.pl?act=buy&pid=$pid\">Try Again</a></h3>";
 		}
 
 		else{
-			print "Came here\n";
 			my $deduct = $cashamt - $iamt;
 			if($deduct < 0){
 				$iamt = $cashamt;
 			}
+			my ($exactDate, $ee);
+
 			my ($closePrice, $error4);
 			if($exists1){
-				($closePrice, $error4) = GetClosingPriceM($date, $stock);
+				($exactDate, $ee) = exactDateM($date, $stock);
+				if($ee){
+					print "Could get the exactDate: $ee";
+				}
+				($closePrice, $error4) = GetClosingPriceM($exactDate, $stock);
 			}
 			elsif($exists2){
-				($closePrice, $error4) = GetClosingPriceO($date, $stock);
+				($exactDate, $ee) = exactDateO($date, $stock);
+				if($ee){
+					print "Could get the exactDate: $ee";
+				}
+				($closePrice, $error4) = GetClosingPriceO($exactDate, $stock);
 #print "closePrice: ".$closePrice;
 			}
 			if($error4){
 				print "Problem getting close price:$error4";
 			}
 			if($closePrice > $iamt){
-				print "<h4>You have insufficient funds to buy stock $stock as the close strike price for one share on".gmtime($date)." is \$$closePrice</h4>";
+				print "<h4>You have insufficient funds to buy stock $stock as the close strike price for one share on".gmtime($exactDate)." is \$$closePrice</h4>";
 #print "<h3><a href=\"portfolio.pl?act=cashManagement&pid=$pid\">Add Cash to Portfolio</a></h3>";
 			}
 			else{
 				my $quantity = floor($iamt/$closePrice);
 #print "<h4>Quantity:".$quantity."</h4>";
 				print "<h4>Stock Chosen:".$stock."</h4>";
-				print "<h4>Close price on ".gmtime($date)." is "."\$".$closePrice."</h4>";
+				print "<h4>Close price on ".gmtime($exactDate)." is "."\$".$closePrice."</h4>";
 				$iamt = $quantity * $closePrice;
 				print "<h4>Investment Amount to be Deducted for ". $quantity." shares : "."\$".$iamt."</h4>";
-				print "<h3><a href=\"portfolio.pl?act=confirmBuy&pid=$pid&stock=$stock&date=$date&iamt=$iamt&quant=$quantity\">Confirm</a></h3>";
+				print "<h3><a href=\"portfolio.pl?act=confirmBuy&pid=$pid&stock=$stock&date=$exactDate&iamt=$iamt&quant=$quantity\">Confirm</a></h3>";
 			}#end closePrice<= $iamt
 		}#end stock exists for date
 
@@ -506,22 +451,22 @@ if($action eq "confirmBuy"){
 	$pid = param('pid');
 	$quantity = param('quant');
 	print start_form(-name=>'ConfirmBuy'),
-				h2('Successful Purchase Summary'),
-				"Date of Purchase: ".localtime($date),
-				p,
-				"Stock Chosen:".$stock,
-				p,
-				"Investment Amount: ".$iamt,
-				p,
-				"Quantity Purchased: ".$quantity,
-				p,      
-				hidden(-name=>'pid',-default=>[$pid]),
-				hidden(-name=>'iamt',-default=>[$iamt]),
-				hidden(-name=>'stock',-default=>[$stock]),
-				hidden(-name=>'date',-default=>[$date]),
-				hidden(-name=>'quant',-default=>[$quantity]),
-				hidden(-name=>'act',-default=>['confirmBuy']),
-				end_form;
+	      h2('Successful Purchase Summary'),
+	      "Date of Purchase: ".gmtime($date),
+	      p,
+	      "Stock Chosen:".$stock,
+	      p,
+	      "Investment Amount: ".$iamt,
+	      p,
+	      "Quantity Purchased: ".$quantity,
+	      p,      
+	      hidden(-name=>'pid',-default=>[$pid]),
+	      hidden(-name=>'iamt',-default=>[$iamt]),
+	      hidden(-name=>'stock',-default=>[$stock]),
+	      hidden(-name=>'date',-default=>[$date]),
+	      hidden(-name=>'quant',-default=>[$quantity]),
+	      hidden(-name=>'act',-default=>['confirmBuy']),
+	      end_form;
 
 
 #check to see if $date and $stock already in Holdings is so then to an update instead of insert
@@ -541,7 +486,7 @@ if($action eq "confirmBuy"){
 	else{
 #Make a new entry in the holdings table
 		my $error1 = AddToHoldings($pid, $date, $stock,$quantity, $iamt);
-		print "Came to Add To Holding\n";
+#		print "Came to Add To Holding\n";
 		if ($error1) { 
 			print "Holding transaction not succsessful: $error1";
 		}
@@ -552,6 +497,8 @@ if($action eq "confirmBuy"){
 		print "Problem Retriving Cash Amount: $error2";
 	}
 
+
+#Update the cash amt in the portfolio
 #Update the cash amt in the portfolio
 	my $newamt = $amt - $iamt;
 	my $error3 = ManageCash($pid, $newamt);
@@ -581,16 +528,16 @@ if ($action eq "cashmgmt") {
 	}
 
 	print start_form(-name=>'Cash Mgmt'),
-				h2('Manage your Portfolio Cash Accounts'),
-				"Portfolio Name:", scrolling_list(-name=>'portfolioname',-values=>[@portfolios],-size=>5),p,
-				"Transaction Type:", radio_group(-name=>'transaction', -values=>['Deposit','Withdraw'], -default=>'Deposit'),p,
-				"Amount: \$", textfield(-name=>'amount'),
-				p,
-				hidden(-name=>'postrun',-default=>['1']),
+	      h2('Manage your Portfolio Cash Accounts'),
+	      "Portfolio Name:", scrolling_list(-name=>'portfolioname',-values=>[@portfolios],-size=>5),p,
+	      "Transaction Type:", radio_group(-name=>'transaction', -values=>['Deposit','Withdraw'], -default=>'Deposit'),p,
+	      "Amount: \$", textfield(-name=>'amount'),
+	      p,
+	      hidden(-name=>'postrun',-default=>['1']),
 #		hidden(-name=>'pid',-default=>[GetPid($user,param('portfolioname'))]),
-				hidden(-name=>'act',-default=>['cashmgmt']),
-				submit,
-				end_form;
+	      hidden(-name=>'act',-default=>['cashmgmt']),
+	      submit,
+	      end_form;
 
 	if (param('postrun')) {
 		my $portfolioname = param('portfolioname');
@@ -653,35 +600,45 @@ if($action eq "sell"){
 	my $iinvest = $data[1];
 #print "stock:".$stock."bdate: ".$bdate."quant: ".$quant." iinvest:".$iinvest; 
 	print start_form(-name=>'Sell'),
-				h2('Sell Stock'),
-				p,
-				"Enter Date Sold:  ", textfield(-name=>'month',-size=>2), "/",textfield(-name=>'day',-size=>2),"/",textfield(-name=>'year',-size=>4),"(mm/dd/yyyy)",
-				p,
-				"Enter Quantity to be Sold: ", textfield(-name=>'qsell',-size=>3),
-				p
-					hidden(-name=>'postrun',-default=>['1']),
-				hidden(-name=>'pid',-default=>[$pid]),
-				hidden(-name=>'bdate',-default=>[$bdate]),
-				hidden(-name=>'stock',-default=>[$stock]),
-				hidden(-name=>'act',-default=>['sell']),
-				p,
-				submit(-name=>'sell'), reset(),
-				end_form;
+	      h2('Sell Stock'),
+	      p,
+	      "Enter Date Sold:  ", textfield(-name=>'month',-size=>2), "/",textfield(-name=>'day',-size=>2),"/",textfield(-name=>'year',-size=>4),"(mm/dd/yyyy)",
+	      p,
+	      "Enter Quantity to be Sold: ", textfield(-name=>'qsell',-size=>3),
+	      p
+		      hidden(-name=>'postrun',-default=>['1']),
+	      hidden(-name=>'pid',-default=>[$pid]),
+	      hidden(-name=>'bdate',-default=>[$bdate]),
+	      hidden(-name=>'stock',-default=>[$stock]),
+	      hidden(-name=>'act',-default=>['sell']),
+	      p,
+	      submit(-name=>'sell'), reset(),
+	      end_form;
 
 	if(param('postrun')){
 		$qsell = param('qsell');
 		$m = param('month');
 		$d = param('day');
 		$y = param('year');
-		$d = $m."/".$d."/".$y." 05:00:00 GMT";
+		$d = $m."/".$d."/".$y." 00:00:00 GMT";
 		$sdate =  parsedate($d);
 #print $sdate;
 		my($exists1, $error2) = StockExistsOnDateM($sdate, $stock);
 		my($exists2, $error3) = StockExistsOnDateO($sdate, $stock);
+		my ($exactSDate, $ee);
+		if($exists1){
+			($exactSDate, $ee) = exactDateM($sdate, $stock);
+		}
+		elsif($exists2){
+			($exactSDate, $ee) = exactDateO($sdate, $stock);
+		}
+		if($ee){
+			print "Could not get the exact sell date: $ee";
+		}
 		if(!$exists1 && !$exists2){
 			print h2('This stock does not exist for the date entered. Try Again!!'); 
 		}
-		elsif($sdate < $bdate){
+		elsif($exactSDate < $bdate){
 			print h2('Cannot sell on date which is prior to purchase date to the stock. Try Again!');
 		}
 		elsif($quant - $qsell < 0){
@@ -689,8 +646,8 @@ if($action eq "sell"){
 		}
 		else{
 			my $diff = $quant - $qsell;
-			print "You want to sell ".$qsell." shares of ". $stock. " stock on ".gmtime($sdate);
-			print "<h3><a href=\"portfolio.pl?act=sellConfirm&pid=$pid&stock=$stock&bdate=$bdate&sdate=$sdate&qsell=$qsell&diff=$diff\">Confirm</a></h3>";
+			print "You want to sell ".$qsell." shares of ". $stock. " stock on ".gmtime($exactSDate);
+			print "<h3><a href=\"portfolio.pl?act=sellConfirm&pid=$pid&stock=$stock&bdate=$bdate&sdate=$exactSDate&qsell=$qsell&diff=$diff\">Confirm</a></h3>";
 #Note put a cancel link that goes back to the portfolio.
 		}   
 	}#end postrun
@@ -766,21 +723,21 @@ if($action eq "sellConfirm"){
 	}#end diff > 0
 
 	print start_form(-name=>'Sell Summary'),
-				h2('Sell Summary'),
-				p,
-				"Sold ".$qsell." shares of stock ". $stock. " on ".localtime($sdate),
-				p,
-				"Cash Received: \$".$cashback,
-				p,
-				"Profit(+)/Loss(-): ".$profitOrLoss,
-				hidden(-name=>'pid',-default=>[$pid]),
-				hidden(-name=>'stock',-default=>[$stock]),
-				hidden(-name=>'bdate',-default=>[$bdate]),
-				hidden(-name=>'sdate',-default=>[$sdate]),
-				hidden(-name=>'qsell',-default=>[$qsell]),
-				hidden(-name=>'diff',-default=>[$diff]),
-				hidden(-name=>'act',-default=>['sellConfirm']),
-				end_form;
+	      h2('Sell Summary'),
+	      p,
+	      "Sold ".$qsell." shares of stock ". $stock. " on ".gmtime($sdate),
+	      p,
+	      "Cash Received: \$".$cashback,
+	      p,
+	      "Profit(+)/Loss(-): ".$profitOrLoss,
+	      hidden(-name=>'pid',-default=>[$pid]),
+	      hidden(-name=>'stock',-default=>[$stock]),
+	      hidden(-name=>'bdate',-default=>[$bdate]),
+	      hidden(-name=>'sdate',-default=>[$sdate]),
+	      hidden(-name=>'qsell',-default=>[$qsell]),
+	      hidden(-name=>'diff',-default=>[$diff]),
+	      hidden(-name=>'act',-default=>['sellConfirm']),
+	      end_form;
 }#end sell confirm 
 
 #
@@ -793,57 +750,6 @@ if($action eq "sellConfirm"){
 # SEE HISTORICGRAPH.PL
 
 #end Joy Code section#
-
-
-###################################################################
-
-# WRITE
-#
-# Write is a "normal" form.
-#
-#
-if ($action eq "write") { 
-#
-# check to see if user can see this
-#
-	if (!UserCan($user,"write-messages")) { 
-		print h2('You do not have the required permissions to write messages.');
-	} else {
-#
-# Generate the form.
-# Your reply functionality will be similar to this
-#
-		print start_form(-name=>'Write'),
-					h2('Make blog entry'),
-					"Subject:", textfield(-name=>'subject'),
-					p,
-					textarea(-name=>'post', 
-							-default=>'Write your post here.',
-							-rows=>16,
-							-columns=>80),
-					hidden(-name=>'postrun',-default=>['1']),
-					hidden(-name=>'act',-default=>['write']), 
-					submit,
-					end_form,
-					hr;
-
-#
-# If we're being invoked with parameters, then
-# do the actual posting. 
-#
-		if (param('postrun')){ 
-			my $by=$user;
-			my $text=param('post');
-			my $subject=param('subject');
-			my $error=Post(0,$by,$subject,$text);
-			if ($error) { 
-				print "Can't post message because: $error";
-			} else {
-				print "Posted the following on $subject from $by:<p>$text";
-			}
-		}
-	}
-}
 
 
 
@@ -863,15 +769,15 @@ if ($action eq "users") {
 # Generate the add form.
 #
 	print start_form(-name=>'AddUser'),
-				h2('Register'),
-				"Enter username: ", textfield(-name=>'name'),
-				p,
-				"Enter password: ", textfield(-name=>'password'), " (Must be 8 characters long)",
-				p,
-				hidden(-name=>'adduserrun',-default=>['1']),
-				hidden(-name=>'act',-default=>['users']),
-				submit(-name=>'Submit'),
-				end_form;
+	      h2('Register'),
+	      "Enter username: ", textfield(-name=>'name'),
+	      p,
+	      "Enter password: ", textfield(-name=>'password'), " (Must be 8 characters long)",
+	      p,
+	      hidden(-name=>'adduserrun',-default=>['1']),
+	      hidden(-name=>'act',-default=>['users']),
+	      submit(-name=>'Submit'),
+	      end_form;
 
 #
 # Run the user add
@@ -1032,11 +938,12 @@ sub GetPortfolioNames {
 #end Joy Code Section#
 
 #get closing price of the stock on based on the date from StockDaily
+#check if the stock exists in StockDaily
 sub StockExistsOnDateM{
 	my($date, $sym) = @_;
 	my @col;
 #select count(*) from StocksDaily where date=1151470800 and symbol='GOOG'; 
-	eval {@col=ExecMySQL("select count(*) from StocksDaily where date=? and symbol=?","COL",$date,$sym);};
+	eval {@col=ExecMySQL("select count(*) from StocksDaily where date >=? and date < ? and symbol=?","COL",$date,$date+(24*60*60),$sym);};
 	if ($@) {
 		return (undef,$@);
 	}
@@ -1045,14 +952,15 @@ sub StockExistsOnDateM{
 	}
 }
 
-#get closing price of the stock on based on the date from OurStockDaily
+#check if the stock exists in NewStocks
 sub StockExistsOnDateO{
-#print "I am in Stock\n";
 	my($date, $sym) = @_;
+#print "I am in Stock".$date."\n";
 #print "sym: ".$sym."\n";
+	my $endDate = $date + (24*60*60);
 	my @col;
 #select count(*) from OurStocksDaily where date=1151470800 and symbol='GOOG'; 
-	eval {@col=ExecSQL($dbuser,$dbpasswd,"select count(*) from NewStocks where DATESTAMP=? and SYMBOL=?","COL",$date,$sym);};
+	eval {@col=ExecSQL($dbuser,$dbpasswd,"select count(*) from NewStocks where datestamp>=? and datestamp<? and symbol=?","COL",$date,$endDate,$sym);};
 	if ($@) {
 		return (undef,$@);
 	}
@@ -1062,11 +970,40 @@ sub StockExistsOnDateO{
 	}
 }
 
+#return the date based on range and symbol
+sub exactDateM{
+	my($date, $sym) = @_;
+	my @col;
+#select count(*) from StocksDaily where date=1151470800 and symbol='GOOG'; 
+	eval {@col=ExecMySQL("select date from StocksDaily where date >=? and date < ? and symbol=?","COL",$date,$date+(24*60*60),$sym);};
+	if ($@) {
+		return (undef,$@);
+	}
+	else {
+		return ($col[0],$@);
+	}
+}
+
+sub exactDateO{
+	my($date, $sym) = @_;
+#print "date:".$date;
+	my @col;
+	my $endDate = $date+(24*60*60);
+#select count(*) from OurStocksDaily where date=1151470800 and symbol='GOOG'; 
+	eval {@col=ExecSQL($dbuser,$dbpasswd,"select DATESTAMP from NewStocks where datestamp>=? and datestamp<? and symbol=?","COL",$date,$endDate,$sym);};
+	if ($@) {
+		return (undef,$@);
+	}
+	else {
+#       print "c: ".$col[0];
+		return ($col[0],$@);
+	}
+}
 #get closing price of the stock on based on the date from StocksDaily
 sub GetClosingPriceM{
 	my($date, $sym) = @_;
-	print "date: ".$date;
-	print "sym: ".$sym;
+#print " ".$date;
+#print "sym: ".$sym;
 	my @col;
 #select close from StocksDaily where date=1151470800 and symbol='GOOG'; 
 	eval {@col=ExecMySQL("select close from StocksDaily where date=? and symbol=?","COL",$date, $sym);};
@@ -1336,41 +1273,63 @@ sub ExecSQL {
 }
 
 
-##############################################
-#
-# Generate a table of available permissions
-# ($table,$error) = PermTable()
-# $error false on success, error string on failure
-#
-sub PermTable {
+#IKH - 
+sub PortfoliosTable {
 	my @rows;
-	eval { @rows = ExecSQL($dbuser, $dbpasswd, "select action from blog_actions"); }; 
-	if ($@) { 
+	my $out = "";
+	eval { @rows = ExecSQL($dbuser, $dbpasswd, "select name, cashamt, strategy, pid from portfolio where username = '$user'"); };
+	if ($@) {
 		return (undef,$@);
 	} else {
-		return (MakeTable("2D",
-					["Perm"],
-					@rows),$@);
+		$out.="<table border><tr><td>NAME</td><td>CASH</td><td>STRATEGY</td><td>VALUE</td></tr>";
+
+		foreach my $row (@rows) {
+			my ($name, $cash, $strategy, $pid) = @{$row};
+			my ($strategyname, $portfoliosum)=("",$cash);
+			my @holdingrows;
+
+			eval { @holdingrows = ExecSQL($dbuser, $dbpasswd, "select datestamp, symbol, iinvest, quantity from holdings where id = '$pid'"); };
+			if ($@) {
+				return (undef,$@);
+			} else {
+				foreach my $holdingrow (@holdingrows) {
+					my ($date, $symbol, $invest, $quantity) = @{$holdingrow};
+
+
+					if($strategy eq "a"){
+						$strategyname = "buy n hold";
+						my ($stocksum,$error) = BuyNHold($symbol,$quantity);
+						if ($error) {
+							print "Can't display portfolio value  because: $error";
+						} else {
+							$portfoliosum += $stocksum;
+						}
+					}
+
+					elsif ($strategy eq "b") {
+						$portfoliosum += `./shannon_ratchet.pl '$symbol' $invest 0 '$date'`;
+						$strategyname = "shannon ratchet";
+					}
+				} 
+			} 
+			$out.="<tr><td><a href = \"portfolio.pl?act=portfoliosummary&pid=$pid&strategy=$strategy&cash=$cash\">$name</a></td><td>$cash</td><td>$strategyname</td><td>$portfoliosum</td></tr>";
+		}
+		$out.="</table>";
+		return $out;
+	}
+
+	sub UserTable {
+		my @rows;
+		eval { @rows = ExecSQL($dbuser, $dbpasswd, "select name from Users order by name"); }; 
+		if ($@) { 
+			return (undef,$@);
+		} else {
+			return (MakeTable("2D",
+						["Name"],
+						@rows),$@);
+		}
 	}
 }
-
-#
-# Generate a table of users
-# ($table,$error) = UserTable()
-# $error false on success, error string on failure
-#
-sub UserTable {
-	my @rows;
-	eval { @rows = ExecSQL($dbuser, $dbpasswd, "select name from Users order by name"); }; 
-	if ($@) { 
-		return (undef,$@);
-	} else {
-		return (MakeTable("2D",
-					["Name"],
-					@rows),$@);
-	}
-}
-
 #IKH - 
 sub PortfoliosTable {
 	my @rows;
@@ -1426,7 +1385,7 @@ sub StocksTable {
 	if ($@) {
 		return (undef,$@);
 	} else {
-		$out.="<table border><tr><td>STOCK</td><td>DATE PURCHASED</td><td>INITIAL INVESTMENT</td><td>INITIAL QUANTITY</td><td>CURRENT VALUE</td></tr>";
+		$out.="<table border><tr><td>STOCK</td><td>DATE PURCHASED</td><td>INVESTMENT</td><td>QUANTITY</td><td>CURRENT VALUE</td></tr>";
 		my $portfoliosum = $cash;
 		foreach my $row (@rows) {
 			my ($date, $symbol, $invest, $quantity) = @{$row};
@@ -1445,9 +1404,11 @@ sub StocksTable {
 				$portfoliosum += $stocksum;
 			}
 
-			my $idate = strftime("%m/%d/%Y", localtime($date));
-			$out.="<tr><td>$symbol</td><td>$idate</td><td>$invest</td><td>$quantity</td><td>$stocksum</td><td><a href = \"historicinfo.pl?symbol=$symbol\">Historic Data</a></td>";
+			my $idate = strftime("%m/%d/%Y", gmtime($date));
+			$out.="<tr><td>$symbol</td><td>$idate</td><td>$invest</td><td>$quantity</td><td>$stocksum</td>";
+			$out.="<td><a href = \"historicinfo.pl?symbol=$symbol\">Historic Data</a></td>";
 			$out.="<td><a href = \"statistics.pl?symbol=$symbol\">Statistical Analysis</a></td>";
+			$out.="<td><a href = \"predict_form.pl?symbol=$symbol\">Predict</a></td>";
 			$out.="<td><a href = \"portfolio.pl?act=sell&pid=$pid&stock=$symbol&bdate=$date\">Sell</a></td></tr>";
 		}
 
@@ -1455,6 +1416,7 @@ sub StocksTable {
 		$out.="<tr><td></td><td></td><td></td><td>TOTAL PORTFOLIO VALUE:</td><td>$portfoliosum</td></table>";
 		$out.="<h3><a href=\"portfolio.pl?act=buy&pid=$pid\">Buy Stock</a></h3>";
 		$out.="<h3><a href=\"p_statistics.pl?pid=$pid\">Analyze This Portfolio</a></h3>";
+		$out.="<h3><a href=\"p_predict.pl?pid=$pid\">Predict This Portfolio</a></h3>";
 		$out.="<h3><a href=\"p_historicinfo.pl?pid=$pid\">Past Performance of This Portfolio</a></h3>";
 		return $out;
 	}
@@ -1463,80 +1425,24 @@ sub StocksTable {
 sub BuyNHold {
 	my ($symbol,$quantity)=@_;
 	my @stockValue;
-	eval { @stockValue = ExecMySQL("select $quantity*close from StocksDaily where symbol = '$symbol' order by date desc limit 1", "COL"); };
-	if ($@) {return (undef,$@); }
-	else { return ($stockValue[0],$@) } ;
+	eval { @stockValue = ExecSQL($dbuser, $dbpasswd, "select $quantity*close from NewStocks where symbol = '$symbol' and datestamp = (select max(datestamp) from NewStocks where symbol = '$symbol')", "COL"); };
+	if ($@) {
+		eval { @stockValue = ExecMySQL("select $quantity*close from StocksDaily where symbol = '$symbol' order by date desc limit 1", "COL"); };
+		if ($@) {return (undef,$@); }
+		else { return ($stockValue[0],$@) } ;
+	} else { return ($stockValue[0],$@) } ;
 }
 
 
-# Generate a table of users and their permissions
-# ($table,$error) = UserPermTable()
-# $error false on success, error string on failure
-#
-sub UserPermTable {
-	my @rows;
-	eval { @rows = ExecSQL($dbuser, $dbpasswd, "select blog_users.name, blog_permissions.action from blog_users, blog_permissions where blog_users.name=blog_permissions.name order by blog_users.name"); }; 
-	if ($@) { 
-		return (undef,$@);
-	} else {
-		return (MakeTable("2D",
-					["Name", "Permission"],
-					@rows),$@);
-	}
-}
-#
-# Add a user
-# call with name,password,email
-#
-# returns false on success, error string on failure.
-# 
-# UserAdd($name,$password,$email)
-#
+
 sub UserAdd { 
 	eval { ExecSQL($dbuser,$dbpasswd,
 			"insert into users (username,password) values (?,?)",undef,@_);};
+
 	return $@;
 }
 
 #
-# Delete a user
-# returns false on success, $error string on failure
-# 
-sub UserDel { 
-	eval {ExecSQL($dbuser,$dbpasswd,"delete from blog_users where name=?", undef, @_);};
-	return $@;
-}
-
-
-#
-# Give a user a permission
-#
-# returns false on success, error string on failure.
-# 
-# GiveUserPerm($name,$perm)
-#
-sub GiveUserPerm { 
-	eval { ExecSQL($dbuser,$dbpasswd,
-			"insert into blog_permissions (name,action) values (?,?)",undef,@_);};
-	return $@;
-}
-
-#
-# Revoke a user's permission
-#
-# returns false on success, error string on failure.
-# 
-# RevokeUserPerm($name,$perm)
-#
-sub RevokeUserPerm { 
-	eval { ExecSQL($dbuser,$dbpasswd,
-			"delete from blog_permissions where name=? and action=?",undef,@_);};
-	return $@;
-}
-
-#
-#
-# Check to see if user and password combination exist
 #
 # $ok = ValidUser($user,$password)
 #
@@ -1555,122 +1461,6 @@ sub ValidUser {
 
 #
 #
-# Check to see if user can do some action
-#
-# $ok = UserCan($user,$action)
-#
-sub UserCan {
-	my ($user,$action)=@_;
-	my @col;
-	eval {@col= ExecSQL($dbuser,$dbpasswd, "select count(*) from blog_permissions where name=? and action=?","COL",$user,$action);};
-	if ($@) { 
-		return 0;
-	} else {
-		return $col[0]>0;
-	}
-}
-
-
-
-
-#
-# Post a message
-#
-# returns false if success, error string if failed.
-#
-# Post($respid, $author, $subject, $text);
-#
-# $respid => "response id", the id of the message to which you are responding.
-#            zero if you are not responding to a message
-# $author, $subject, $text => self-explanatory
-#
-sub Post { 
-	my ($respid,$author, $subject, $text) = @_;
-
-#
-# this idiom, eval and then $@, is an exception handling trick in perl
-# even if ExecSQL dies, the eval will succeed.  At the end of the 
-# eval, $@ will either be false or will contain the string with which
-# die was called.
-#
-	eval { ExecSQL($dbuser,$dbpasswd,"insert into blog_messages (id,respid,author,subject,time,text) ".
-			"select blog_message_id.nextval, ?, ?, ?, ?, ? from dual",
-			undef, $respid, $author, $subject, time(), $text); };
-	return $@ ;
-}
-
-
-#
-# Generate a summary of messages (a table of all messages in the system)
-# You will extend this to support showing a tree of messages and also
-# within other constraints
-#
-# ($table,$error) = MessageSummary();
-#
-sub MessageSummary {
-	my @rows;
-	eval { @rows = ExecSQL($dbuser,$dbpasswd,
-			"select author,subject,time from blog_messages where id<>0 order by time");};
-	if ($@) { 
-		return (undef,$@);
-	} else {
-# Convert time values to pretty printed version
-		foreach my $r (@rows) {
-			$r->[2]=localtime($r->[2]);
-		}
-		return (MakeTable("2D", ["Author","Subject","Time"],@rows),$@);
-	}
-}
-
-#
-# Generate a list of messages that match the criteria 
-# Currently, this is ignores the criteria and shows all messages
-# You will fix this.
-#
-# ($html,$error) = MessageQuery($from,$to,$by)
-#
-sub MessageQuery {
-	my ($from, $to, $by) = @_;
-
-	my $timefrom=parsedate($from);
-	my $timeto=parsedate($to);
-
-	my @msgs;
-	eval {@msgs=ExecSQL($dbuser,$dbpasswd,"select id, respid, author, subject, time, text from blog_messages where id<>0 order by time");};
-	if ($@) { 
-		return (undef,$@);
-	} else {
-		my $msg;
-		my $out="";
-		$out.="<h3>Messages from $timefrom to $timeto by '$by'<h3>";
-		if ($msg<0) { 
-			$out.="There are no messages";
-		}
-		foreach $msg (@msgs) { 
-			my ($id, $respid, $author, $subject, $time, $text) = @{$msg};
-			$out.="<table border><tr><td><b>id:</b></td><td>$id</td><td><b>respid:</b></td><td>$respid</td><td><b>Time:</b></td><td>".localtime($time)."</td></tr>";
-			$out.="<tr><td><b>author:</b></td><td colspan=5>$author</td></tr>";
-			$out.="<tr><td><b>subject:</b></td><td colspan=5>$subject</td></tr>";
-			$out.="<tr><td colspan=6>$text</td></tr>";
-			$out.="</table>";
-		}
-		return ($out,$@);
-	}
-}
-
-#
-# Given a list of scalars, or a list of references to lists, generates
-# an html table
-#
-#
-# $type = undef || 2D => @list is list of references to row lists
-# $type = ROW   => @list is a row
-# $type = COL   => @list is a column
-#
-# $headerlistref points to a list of header columns
-#
-#
-# $html = MakeTable($type, $headerlistref,@list);
 #
 sub MakeTable {
 	my ($type,$headerlistref,@list)=@_;

@@ -11,7 +11,6 @@ $ENV{ORACLE_BASE}="/opt/oracle/product/11.2.0";
 $ENV{ORACLE_SID}="CS339";
 
 
-
 $user='cs339';
 $pass='cs339';
 $db='cs339';
@@ -86,41 +85,41 @@ system $exec;
 
 
 
-
 @newdata = ExecSQL($oracle_user,$oracle_pass,$sql2) ;
 
 open(FILE, ">>_plot.in");
 
 foreach $row(@newdata) {
 	$printrow = join("	", @{$row});
-	print FILE "$printrow\n";
+	print FILE "$printrow\n" if $plot;
+	print "$printrow\n" if not $plot;
 }
 close(FILE);
 
-sub ExecSQL {
-	my ($user, $passwd, $querystring,  @fill) =@_;
-	my $dbh = DBI->connect("DBI:Oracle:",$user,$passwd);
-	if (not $dbh) {
+ sub ExecSQL {
+                        my ($user, $passwd, $querystring,  @fill) =@_;
+                        my $dbh = DBI->connect("DBI:Oracle:",$user,$passwd);
+                        if (not $dbh) {
 # if the connect failed, record the reason to the sqloutput list (if set)
 # and then die.
-		die "Can't connect to database because of ".$DBI::errstr;
-	}
-	my $sth = $dbh->prepare($querystring);
-	if (not $sth) {
+                                die "Can't connect to database because of ".$DBI::errstr;
+                        }
+                        my $sth = $dbh->prepare($querystring);
+                        if (not $sth) {
 #
 # If prepare failed, then record reason to sqloutput and then die
 #
-		my $errstr="Can't prepare $querystring because of ".$DBI::errstr;
-		$dbh->disconnect();
-		die $errstr;
-	}
-	if (not $sth->execute(@fill)) {
+                                my $errstr="Can't prepare $querystring because of ".$DBI::errstr;
+                                $dbh->disconnect();
+                                die $errstr;
+                        }
+                        if (not $sth->execute(@fill)) {
 #
 # if exec failed, record to sqlout and die.
-		my $errstr="Can't execute $querystring with fill (".join(",",map {"'$_'"} @fill).") because of ".$DBI::errstr;
-		$dbh->disconnect();
-		die $errstr;
-	}
+                                my $errstr="Can't execute $querystring with fill (".join(",",map {"'$_'"} @fill).") because of ".$DBI::errstr;
+ $dbh->disconnect();
+                                die $errstr;
+                        }
 #
 # The rest assumes that the data will be forthcoming.
 #
