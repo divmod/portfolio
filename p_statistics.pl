@@ -151,10 +151,10 @@ if (param('postrun')) {
 	}
 	else {
 		if ($stat_type eq 'Covariance Matrix') {
-			@matrix = `./get_covar.pl --from='$startdate' --to='$enddate' --field1='$field1' --field2='$field2' $stockslist`;
+			@matrix = `./get_covar2.pl --from='$startdate' --to='$enddate' --field1='$field1' --field2='$field2' $stockslist`;
 		}
 		else {
-			@matrix = `./get_covar.pl --from='$startdate' --to='$enddate' --field1='$field1' --field2='$field2' --corrcoeff $stockslist`;
+			@matrix = `./get_covar2.pl --from='$startdate' --to='$enddate' --field1='$field1' --field2='$field2' --corrcoeff $stockslist`;
 		}
 
 		print "<table>";
