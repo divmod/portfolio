@@ -1,0 +1,58 @@
+Portfolio Application Readme
+EECS 339 Databases Project B
+
+Group: Joy Bian, Irene Haque, Diana Palsetia
+
+User may register for a new account or use the existing root/rootroot account.
+
+The ability to create a portfolio is given to all, where you can name the portfolio, deposit an initial cash amount, and select a trading strategy applied to the collection of stocks within.
+
+At any later date, the user has the option of adding more cash or removing some from the cash account associated with a portfolio. 
+
+Our two trading strategies are: BUY AND HOLD and SHANNON RATCHET
+
+Buy and hold is a naive trading strategy where the user selects the collection of stocks that they desire, the purchase dates, and the cash amount that they would like to put towards buying their stocks. It is left up to the user to decide when they would like to buy more or sell any stocks.
+
+Shannon ratchet is the application of the provided Shannon Ratchet trading strategy. We display the result of applying this trading strategy for the current date. Since this is a hypothetical application, we do not modify the initial purchase data for the stock. So the acquired date and quantities persist, allowing the user to sell their stocks after the purchase date and see an adjusted current quantity and value from the SR trading strategy.
+
+
+
+When buying a stock, we first check for whether the date given as the purchase date exists in our historic data (StocksDaily and NewStocks), then we request an initial cash amount that they would like to purchase their stocks. We calculate how many stocks they can acquire from this initial cash amount (investment amount / close price = quantity), and if the stock has a close price for their specified day, it is purchased (added into the Holdings table).
+
+When selling a stock, we also check for whether the date given exists in our historic data. That is the close price used to determine the amount of cash to add into the portfolio's cash account. The user can designate a specific quantity--they do not necessarily have to sell the entire holding, but merely n stocks out of the entire thing.
+
+
+
+In the statistics calculations, we alter the given scripts to look for data from our own table of collected stock information in addition to the StocksDaily table. If the date range doesn't include dates from our NewStocks table, then no results are returned. The calculation for Beta requires that a stock's performance be compared to the performance of the market. The way that we implemented this was to compute the average of a sum of symbols (the current 30 Dow Jones Index) and store or cache this in a table called MarketDaily. This was run once from the market_value.pl Perl script. 
+
+The display of historic data (also called past performance) is a query into the Stocks tables (Daily and New) for the close prices over a range of time. The user specifies a date that they would like to see the data up to, and a time interval offset before that date. The results are plotted and tabulated to show to the user. For the entire portfolio, we aggregate the sum of all of the close prices of the collection of stocks multiplied by the quantity of a stock for each day of the time interval and display that to the user. 
+
+In the prediction feature, we use the Time Series Project and the underlining model is the Autoaggressive Model of Order P. The user is allowed to select the numeric order of P from 1 to 20. The user gives the date which they would like to begin the predictions and a time interval offset after that date. The results are plotted as well as tabulated and shown to the user. In predicting for the entire portfolio, we multiply each stock's predicted value with the quantity held of that stock and sum up the stock prices for that date before plotting. 
+
+
+LIST OF FILES
+- portfolio.html: Page for the application for the user to run
+- actions.html: Sidebar/frame for user actions
+- portfolio.pl: The main portfolio management program
+- portfolio.sql: The SQL DDL file that needs to be run in Oracle to create the tables used in our application
+- drop.sql: The SQL DDL file that will drop all of the tables created (except for NewStocks)
+- get_beta.pl: This is the script file that calculates the beta of a stock compared to the market
+- get_covar2.pl: This is the altered script file that calculates covariance matrix and correllation (looking in both sets of data)
+- get_data.pl: This is the altered script file that returns the given fields for a date range and symbol (looking in both sets of data)
+- get_data_multi.pl: This is an altered script file that returns the given fields for a date range and any number of symbols (looking in both sets of data)
+- get_info2.pl: This is the altered script file that returns the given fields for a date range and a symbol (looking at both sets)
+- historicinfo.pl: This is the script file that plots the historic performance of a single stock, given the symbol name (looking at both sets)
+- p_historicinfo.pl: This is the script file that plots the historic performance of a portfolio, given the portfolio name. 
+- predict.pl: This is the script file that performs prediction on a per stock basis.
+- p_predict.pl: This is the script file that performs prediction for the entire portfolio (set of stocks).
+- market_value.pl: This is the script that populates the MarketDaily table with the market close prices over all date ranges.
+- p_predict_form.pl: This is the script file that takes user input and displays the prediction of a portfolio.
+- predict_form.pl: This is the script file that takes the user input and displays predictions for a single stock.
+- p_statistics.pl: This is the script file that calculates portfolio-wide statistics (standard deviation, coefficient of variation, covariance matrix, and correlation coefficient).
+- shannon_ratchet.pl: This is the script that runs the Shannon Ratchet trading strategy.
+- time_series_*: These are the underlying files that calculate the predictions.
+- stocks.txt: This is a cached file for the list of symbol names.
+- statistics.pl: This is the script file that calculates stock-level statistics (standard deviation, coefficient of variation, beta).
+
+- see http://339.cs.northwestern.edu/~drp925/portfolio/handin/handin.html for all of the required design documents/handins
+
