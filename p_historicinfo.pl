@@ -10,8 +10,8 @@ use DBI;
 
 my $dbuser="ikh831";
 my $dbpasswd="o29de7c3f";
-#my $dbuser="drp925";
-#my $dbpasswd="o3d7f737e";
+my $oracle_user="drp925";
+my $oracle_pass="o3d7f737e";
 #my $dbuser="jhb348";
 #my $dbpasswd="ob5e18c77";
 my @sqlinput=();
@@ -64,6 +64,16 @@ if (param('postrun')) {
 	if ($error2) {
 		print "Error in getting holdings from portfolio: $error2";
 	}
+
+	my @quantities;
+	my $quant;
+
+	foreach my $stock (@stocks) {
+		$quant = getQuantity($stock,$todate);
+		push (@quantities,$quant);
+	}
+
+	#print @quantities,p;
 
 	if ($period eq 'Day') {
 		$fromdate = parsedate($enddate) - (24 * 60 * 60);
@@ -137,7 +147,7 @@ sub GnuPlot
 	print GNUPLOT "set timefmt \"%s\"\n";
 	print GNUPLOT "set format x \"%m/%d/%y\"\n";
 	print GNUPLOT "set xlabel 'Date'\n";
-	print GNUPLOT "set ylabel 'Price Per Unit'\n";
+	print GNUPLOT "set ylabel 'Price'\n";
 	print GNUPLOT "plot \"$datafile\" using 1:2 title 'Portfolio Value' with linespoints\n";
 #	print GNUPLOT "plot ";
 #	for ($i = 2; $i < scalar @stocks; $i++) {
@@ -146,6 +156,18 @@ sub GnuPlot
 #	print GNUPLOT "\"$datafile\" using 1:$i title '$stocks[$i-2]' with linespoints\n";
 	close(GNUPLOT);
 	return $outputfile;
+}
+
+sub getQuantity{
+  my ($sym, $date)=@_;
+	my @col;
+	eval { @col=ExecSQL($oracle_user,$oracle_pass,"select sum(quantity) from Holdings where datestamp <= ? and symbol=?",'COL',$date, $sym); };
+	if($@){
+		return (undef, $@);
+	}
+	else{
+		return ($col[0]);
+	}
 }
 
 sub PidToPortfolioName {
