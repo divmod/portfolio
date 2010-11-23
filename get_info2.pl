@@ -34,6 +34,7 @@ print "</td></tr>";
 #print $from."\n";
 #print $to."\n";
 while ($symbol=shift) {
+
   #print $symbol."\n";
   $sql = "select count($field), avg($field), std($field), min($field), max($field)  from StocksDaily where symbol='$symbol'";
   $sql.= " and date>=$from" if $from;
