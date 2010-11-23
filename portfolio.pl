@@ -63,6 +63,7 @@ my $dbuser="drp925";
 my $dbpasswd="o3d7f737e";
 #my $dbuser="jhb348";
 #my $dbpasswd="ob5e18c77";
+my @stocks;
 
 #my $dbuser="ikh831";
 #my $dbpasswd="o29de7c3f";
@@ -358,11 +359,18 @@ if($action eq "buy"){
 		print "Can't get available amt:$error1";
 	}
 
-	my (@stocks, $error2) = GetStocks();
-	if($error2){
-		print "Can't stocks:$error2";
-	}
-
+#	my (@stocks, $error2) = GetStocks();
+#	if($error2){
+#		print "Can't stocks:$error2";
+#	}
+#	if (!(defined(@stocks))) {
+		my $data_file="stocks.txt";
+		open(DAT,$data_file) || die ("Could not open file!");
+		my @data=<DAT>;
+		close(DAT);
+		@stocks = split(/\s/,$data[0]);
+#		print "Created the Stocks Array!\n";
+#	}
 
 	print start_form(-name=>'Buy'),
 	      h2('Buy Stock'),
@@ -535,7 +543,7 @@ if ($action eq "cashmgmt") {
 
 	print start_form(-name=>'Cash Mgmt'),
 	      h2('Manage your Portfolio Cash Accounts'),
-	      "Portfolio Name:", scrolling_list(-name=>'portfolioname',-values=>[@portfolios],-size=>5),p,
+	      "Portfolio Name:", popup_menu(-name=>'portfolioname',-values=>[@portfolios]),p,
 	      "Transaction Type:", radio_group(-name=>'transaction', -values=>['Deposit','Withdraw'], -default=>'Deposit'),p,
 	      "Amount: \$", textfield(-name=>'amount'),
 	      p,
@@ -560,7 +568,7 @@ if ($action eq "cashmgmt") {
 			print "Error in getting AvailableCashInPortfolio";
 		}
 		else {
-			print "<h2>Available Cash in Portfolio \"$portfolioname\": \$$availcash</h2>",p;
+			print "<h3>Available Cash in Portfolio \"$portfolioname\" Before Transaction: \$$availcash</h3>",p;
 		}
 
 #		print "Postrun! $portfolioname, $transactiontype, $amount, $pidno, $availcash",p;
@@ -570,7 +578,9 @@ if ($action eq "cashmgmt") {
 			if ($error3) { 
 				print "Portfolio cash not properly debited: $error3";
 			}
-			print "<h2>Deposited \$$amount into Portfolio \"$portfolioname\"</h2>";
+			print "<h3>Deposited \$$amount into Portfolio \"$portfolioname\"</h3>";
+			my ($availcash,$error2) = AvailableCashInPortfolio($pidno);
+			print "<h3>Available Cash in Portfolio now: \$$availcash</h3>";
 		}
 		elsif ($transactiontype eq 'Withdraw') {
 			if ($availcash < $amount) {
@@ -582,7 +592,9 @@ if ($action eq "cashmgmt") {
 				if ($error3) { 
 					print "Portfolio cash not properly debited: $error3";
 				}			
-				print "<h2>Withdrew \$$amount from Portfolio $portfolioname</h2>";
+				print "<h3>Withdrew \$$amount from Portfolio $portfolioname</h3>";
+				my ($availcash,$error2) = AvailableCashInPortfolio($pidno);
+				print "<h3>Available Cash in Portfolio now: \$$availcash</h3>";
 			}
 		}
 	}
