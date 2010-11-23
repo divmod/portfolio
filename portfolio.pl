@@ -1384,7 +1384,7 @@ sub StocksTable {
 		$out.="<tr><td>CASH</td><td></td><td></td><td></td><td>$cash</td>";
 		$out.="<tr><td></td><td></td><td></td><td>TOTAL PORTFOLIO VALUE:</td><td>$portfoliosum</td></table>";
 		$out.="<h3><a href=\"portfolio.pl?act=buy&pid=$pid\">Buy Stock</a></h3>";
-		$out.="<h3><a href=\"p_statistics.pl?pid=$pid\">Analyze This Portfolio</a></h3>";
+		$out.="<h3><a href=\"p_statistics.pl?pid=$pid\">Portfolio Statistics</a></h3>";
 		$out.="<h3><a href=\"p_predict_form.pl?pid=$pid\">Predict This Portfolio</a></h3>";
 		$out.="<h3><a href=\"p_historicinfo.pl?pid=$pid\">Past Performance of This Portfolio</a></h3>";
 		return $out;
