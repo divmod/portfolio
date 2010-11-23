@@ -35,28 +35,28 @@ print "</td></tr>";
 #print $to."\n";
 while ($symbol=shift) {
   #print $symbol."\n";
-  $sql = "select count($field), avg($field), std($field), min($field), max($field)  from StocksDaily where symbol='$symbol'";
+  $sql = "select count($field), sum($field), std($field), min($field), max($field)  from StocksDaily where symbol='$symbol'";
   $sql.= " and date>=$from" if $from;
   $sql.= " and date<=$to" if $to;
   
-  $sq2 = "select count($field), avg($field), stddev($field), min($field), max($field)  from NewStocks where symbol='$symbol'";
+  $sq2 = "select count($field), sum($field), stddev($field), min($field), max($field)  from NewStocks where symbol='$symbol'";
   $sq2.= " and datestamp>=$from" if $from;
   $sq2.= " and datestamp<=$to" if $to;
 
   #  print STDERR $sql,"\n";
 
   my $output1=`mysql --batch --silent --user=$user --password=$pass --database=$db --execute=\"$sql\"`;
-  my @newdata = ExecSQL($oracle_user,$oracle_pass,$sq2) ;
+  my @newdata = ExecSQL($oracle_user,$oracle_pass,$sq2, undef) ;
   my $output2;
   foreach my $d (@newdata){
       $output2 = join("	", @{$d});
   }
  
    #from StocksDaily
-  ($n1,$mean1,$std1,$min1,$max1)=split(/\s+/,$output1);
+  ($n1,$sum1,$std1,$min1,$max1)=split(/\s+/,$output1);
   
   #from NewStocks
-  ($n2,$mean2,$std2,$min2,$max2)=split(/\s+/,$output2,undef);
+  ($n2,$sum2,$std2,$min2,$max2)=split(/\s+/,$output2);
   
   #Variables for combining data from both tables
   $n, $mean, min, max, $std;
@@ -73,14 +73,14 @@ while ($symbol=shift) {
   }
   
   #mean calculation
-  if($mean1 != undef && $mean2 != undef){
-      $mean = ($mean1 + $mean2)/($n1 + $n2);
+  if($sum1 != undef && $sum2 != undef){
+      $mean = ($sum1 + $sum2)/($n1 + $n2);
   }
-  elsif($mean1 != undef){
-     $mean = $mean1;
+  elsif($sum1 != undef){
+     $mean = $sum1/$n1;
   }
-  elsif($mean2 != undef){
-     $mean = $mean2;
+  elsif($sum2 != undef){
+     $mean = $sum2/$n2;
   }
   
   #min calculation
@@ -116,11 +116,12 @@ while ($symbol=shift) {
      $std = $std2;
   }
   
-      
+  my $cov = $std/$mean;      
   #print $min;
   print "<tr><td>";
-  print join("</td><td>",$symbol,$field, $n, $mean, $std, $min, $max, $std/$mean),"\n";
-  #print "$symbol,$field, $n, $mean, $std, $min, $max, $std/$mean";
+  print join("</td><td>",$symbol,$field, $n, $mean, $std, $min, $max, $cov),"\n";
+
+  #print "$symbol,$field, $n, $mean, $std, $min, $max, $cov";
   print "</td></tr>";
 }
 
