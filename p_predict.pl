@@ -28,7 +28,6 @@ elsif(($o ne "") && ($oo ne "")){
     $model=join(" ",$o, $oo, $m, $mo);
 }
 elsif($mo ne ""){
-    print "Came here\n";
     $model=join(" ",$m, $mo);
 }
 else{
@@ -36,7 +35,6 @@ else{
 }
 
 
-print "model: ".$model."\n";
 $date=shift;
 #print $date."\n";
 $steps=shift;
