@@ -8,10 +8,10 @@ use Time::CTime;
 use DBI;
 
 
-my $dbuser="ikh831";
-my $dbpasswd="o29de7c3f";
-my $oracle_user="drp925";
-my $oracle_pass="o3d7f737e";
+#my $dbuser="ikh831";
+#my $dbpasswd="o29de7c3f";
+my $dbuser="drp925";
+my $dbpasswd="o3d7f737e";
 #my $dbuser="jhb348";
 #my $dbpasswd="ob5e18c77";
 my @sqlinput=();
@@ -161,7 +161,7 @@ sub GnuPlot
 sub getQuantity{
   my ($sym, $date)=@_;
 	my @col;
-	eval { @col=ExecSQL($oracle_user,$oracle_pass,"select sum(quantity) from Holdings where datestamp <= ? and symbol=?",'COL',$date, $sym); };
+	eval { @col=ExecSQL($dbuser,$dbpasswd,"select sum(quantity) from Holdings where datestamp <= ? and symbol=?",'COL',$date, $sym); };
 	if($@){
 		return (undef, $@);
 	}

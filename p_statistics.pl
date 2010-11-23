@@ -21,12 +21,12 @@ $ENV{ORACLE_SID}="CS339";
 # you need to override these for access to your database
 #
 
-#my $dbuser="drp925";
-#my $dbpasswd="o3d7f737e";
+my $dbuser="drp925";
+my $dbpasswd="o3d7f737e";
 #my $dbuser="jhb348";
 #my $dbpasswd="ob5e18c77";
-my $dbuser="ikh831";
-my $dbpasswd="o29de7c3f";
+#my $dbuser="ikh831";
+#my $dbpasswd="o29de7c3f";
 
 
 
@@ -143,7 +143,7 @@ if (param('postrun')) {
 
 #	my @results =	`./get_info.pl --from='$fromdate' --to='$todate' --field=$field --plot $stockslist`;
 	if ($stat_type eq 'Standard Deviation/Coefficient of Variation') {
-		@results = `./get_info.pl --from='$startdate' --to='$enddate' --field=$field --plot $stockslist`;
+		@results = `./get_info2.pl --from='$startdate' --to='$enddate' --field=$field --plot $stockslist`;
 		for ($i = 0; $i < $count; $i++) {
 			print "$results[$i]";
 		}
