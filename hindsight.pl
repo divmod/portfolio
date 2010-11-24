@@ -24,13 +24,11 @@ while (<STOCK>) {
        $stock = floor($cash/$lastlow); 
        $price = $lastlow * $stock; 
        $cash = $cash - $price; 
-       print "BOUGHT: $stock PRICE: $price CASH: $cash\n"; 
     }
   } else {
     if ($lasthigh gt $stockhigh) {
        $price = $stock*$lasthigh;
        $cash = $cash + $price;
-       print "SOLD: $stock PRICE: $price CASH: $cash\n"; 
        $stock = 0;
     }
   } 

@@ -1350,7 +1350,7 @@ sub PortfoliosTable {
 						my ($totalsum,$sum,$newcash,$quantity) = split(/ /, $hindsight_return);
 						$portfoliosum += $totalsum;
 						$cash += $newcash;
-						$strategyname = "hindsigh";
+						$strategyname = "hindsight";
 				
 					}
 				} 

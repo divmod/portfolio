@@ -31,7 +31,7 @@ The display of historic data (also called past performance) is a query into the 
 In the prediction feature, we use the Time Series Project and the underlining model is the Autoaggressive Model of Order P. The user is allowed to select the numeric order of P from 1 to 20. The user gives the date which they would like to begin the predictions and a time interval offset after that date. The results are plotted as well as tabulated and shown to the user. In predicting for the entire portfolio, we multiply each stock's predicted value with the quantity held of that stock and sum up the stock prices for that date before plotting. 
 
 
-The new daily stocks are populated by scheduling 
+The new daily stocks are populated by scheduling the script quotes3.pl.
 
 LIST OF FILES
 - portfolio.html: Page for the application for the user to run
@@ -56,7 +56,7 @@ LIST OF FILES
 - time_series_*: These are the underlying files that calculate the predictions.
 - stocks.txt: This is a cached file for the list of symbol names.
 - statistics.pl: This is the script file that calculates stock-level statistics (standard deviation, coefficient of variation, beta).
-- recording.tar: These are the files used to get the new daily stock values, which crontab is set for.
+- recording/quotes3.pl: This is the script file that retrieves the new daily stock values. It is scheduled via crontab for extra credit.
 
 - see http://339.cs.northwestern.edu/~ikh831/portfolio/handin/handin.html for all of the required design documents/handins
 
