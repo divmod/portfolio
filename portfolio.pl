@@ -284,6 +284,8 @@ if($action eq "portfoliosummary") {
 			$tstrategy = "buy n hold";
 		} elsif ($strategy eq "b") {
 			$tstrategy = "shannon rachet";
+		} elsif ($strategy eq "c") {
+			$tstrategy = "hindsight";
 		}
 		print "<h2>Your Stocks for Portfolio $pid using trading strategy: $tstrategy</h2>$table";
 	}
@@ -298,8 +300,8 @@ if($action eq "create"){
 	      p,
 	      "Cash Amt:  ", textfield(-name=>'cashamt'),
 	      p,
-#	popup_menu(-name=>'strategy', -values=>['a', 'b', 'c'], -labels=>{'a' => 'buy n hold', 'b' => 'shannon rachet', 'c'=>'markov model'}, -default=>'a'), 
-	      popup_menu(-name=>'strategy', -values=>['a', 'b'], -labels=>{'a' => 'buy n hold', 'b' => 'shannon rachet'}, -default=>'a'),
+	popup_menu(-name=>'strategy', -values=>['a', 'b', 'c'], -labels=>{'a' => 'buy n hold', 'b' => 'shannon rachet', 'c'=>'hindsight'}, -default=>'a'), 
+#	      popup_menu(-name=>'strategy', -values=>['a', 'b'], -labels=>{'a' => 'buy n hold', 'b' => 'shannon rachet'}, -default=>'a'),
 	      p,
 	      hidden(-name=>'postrun',-default=>['1']),
 	      hidden(-name=>'act',-default=>['create']), 
@@ -318,11 +320,9 @@ if($action eq "create"){
 		}
 		elsif($strategy eq "b"){
 			$s = "shannon rachet";
+		} elsif ($strategy eq "c") {
+			$s = "hindsight";
 		}
-#     elsif($strategy eq "c"){
-#	$s = "markov model";
-#      }
-#print "came here\n";
 		my $error=AddPortfolio($user, $pname, $cashamt,$strategy);
 		if ($error) { 
 			print "Can't post message because: $error";
@@ -1344,6 +1344,15 @@ sub PortfoliosTable {
 						$cash += $newcash;
 						$strategyname = "shannon ratchet";
 					}
+
+					elsif ($strategy eq "c") {
+						my $hindsight_return = `./hindsight.pl '$symbol' $quantity $date`;
+						my ($totalsum,$sum,$newcash,$quantity) = split(/ /, $hindsight_return);
+						$portfoliosum += $totalsum;
+						$cash += $newcash;
+						$strategyname = "hindsigh";
+				
+					}
 				} 
 			} 
 			$out.="<tr><td><a href = \"portfolio.pl?act=portfoliosummary&pid=$pid&strategy=$strategy&cash=$paramcash\">$name</a></td><td>$cash</td><td>$strategyname</td><td>$portfoliosum</td></tr>";
@@ -1379,6 +1388,15 @@ sub StocksTable {
 			elsif ($strategy eq "b") {
 				my $shannon_return = `./shannon_ratchet.pl '$symbol' $invest 0 '$date'`;
 				my($totalsum,$sum,$newcash,$newquantity)= split(/ /, $shannon_return);
+				$portfoliosum += $totalsum;
+				$cash += $newcash;
+				$quantity = $newquantity;
+				$stocksum = $sum;
+			}
+
+			elsif ($strategy eq "c") {
+				my $hindsight_return = `./hindsight.pl '$symbol' $quantity '$date'`;
+				my($totalsum,$sum,$newcash,$newquantity)= split(/ /, $hindsight_return);
 				$portfoliosum += $totalsum;
 				$cash += $newcash;
 				$quantity = $newquantity;

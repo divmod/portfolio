@@ -9,12 +9,13 @@ The ability to create a portfolio is given to all, where you can name the portfo
 
 At any later date, the user has the option of adding more cash or removing some from the cash account associated with a portfolio. 
 
-Our two trading strategies are: BUY AND HOLD and SHANNON RATCHET
+Our three trading strategies are: BUY AND HOLD and SHANNON RATCHET and HINDSIGHT
 
 Buy and hold is a naive trading strategy where the user selects the collection of stocks that they desire, the purchase dates, and the cash amount that they would like to put towards buying their stocks. It is left up to the user to decide when they would like to buy more or sell any stocks.
 
-Shannon ratchet is the application of the provided Shannon Ratchet trading strategy. We display the result of applying this trading strategy for the current date. Since this is a hypothetical application, we do not modify the initial purchase data for the stock. So the acquired date and quantities persist, allowing the user to sell their stocks after the purchase date and see an adjusted current quantity and value from the SR trading strategy.
+Shannon ratchet is the application of the provided Shannon Ratchet trading strategy. We display the stock monetary value and quantity results for the current date. The cash value for each investment is totaled into to the portfolio cash account.  Since this is a hypothetical application, we only store the initial purchase data for the stock. So the acquired date and quantities persist in the database, allowing the user to sell their stocks after the purchase date and see an adjusted current quantity and value from the SR trading strategy.
 
+Hindsight is a script that, for a specific stock and from date, calculates when to buy or sell depending on the next day's high or low prices.  The script sells high and buys low.
 
 
 When buying a stock, we first check for whether the date given as the purchase date exists in our historic data (StocksDaily and NewStocks), then we request an initial cash amount that they would like to purchase their stocks. We calculate how many stocks they can acquire from this initial cash amount (investment amount / close price = quantity), and if the stock has a close price for their specified day, it is purchased (added into the Holdings table).
@@ -29,6 +30,8 @@ The display of historic data (also called past performance) is a query into the 
 
 In the prediction feature, we use the Time Series Project and the underlining model is the Autoaggressive Model of Order P. The user is allowed to select the numeric order of P from 1 to 20. The user gives the date which they would like to begin the predictions and a time interval offset after that date. The results are plotted as well as tabulated and shown to the user. In predicting for the entire portfolio, we multiply each stock's predicted value with the quantity held of that stock and sum up the stock prices for that date before plotting. 
 
+
+The new daily stocks are populated by scheduling 
 
 LIST OF FILES
 - portfolio.html: Page for the application for the user to run
@@ -53,6 +56,7 @@ LIST OF FILES
 - time_series_*: These are the underlying files that calculate the predictions.
 - stocks.txt: This is a cached file for the list of symbol names.
 - statistics.pl: This is the script file that calculates stock-level statistics (standard deviation, coefficient of variation, beta).
+- recording.tar: These are the files used to get the new daily stock values, which crontab is set for.
 
-- see http://339.cs.northwestern.edu/~drp925/portfolio/handin/handin.html for all of the required design documents/handins
+- see http://339.cs.northwestern.edu/~ikh831/portfolio/handin/handin.html for all of the required design documents/handins
 

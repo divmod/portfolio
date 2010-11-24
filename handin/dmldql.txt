@@ -1,3 +1,5 @@
+DML and DQL Examples
+
 ########DML###########
 
 Portfolio:
@@ -11,8 +13,11 @@ Update Portfolio set cashamt=7000 where pid=1035;
 --------------------
 
 Holdings:
-1. Add to Holdings
+1. Create a Holdings
 INSERT into Holdings(id, datestamp, symbol, quantity, iinvest) values(2081, 1151470800 , 'GOOG', 10, 500);
+
+2. Update a unique holding:
+UPDATE Holdings set quantity=10, iinvest = 4000.50 where id=2081 and datestamp=1151470800 and symbol='GOOG';
 
 --------------------
 
@@ -29,6 +34,35 @@ SELECT cashamt from Portfolio where pid='1038';
 
 --------------------
 Holdings:
+1. Get data of an unique holding information
+SELECT quantity, investment from Holdings where id=2081 and datestamp=1151470800 and symbol='GOOG';
+
+2. Check if a unique holding exists (if does then count will return 1)
+SELECT count(*) from Holdings where id=2081 and datestamp=1151470800 and symbol='GOOG';
+
+3. Get quantity of a stock upto to date. Need this as we could have bought more quantities of stock on different dates. 
+SELECT sum(quantity) from Holdings where datestamp <=1151470800  and symbol='GOOG';
+
+--------------------
+NewStocks:
+1. Get a closing price a stock on a particular day
+SELECT close from NewStocks where date=1151470800 and symbol='GOOG';
+
+2. To check whether a stock exists on a paarticular day
+SELECT count(*) from OurStocksDaily where date=1151470800 and symbol='GOOG';
+
+3. Get Statistical Data of the close price of stock between a data range:
+SELECT count(close), sum(close), std(clsoe), min(close), max(close)  from StocksDaily where symbol='GOOG' and datestamp>=1290038400 and datestamp<= 1290211200;
+
+4. To calculate mean and std of two stocks (e.g GOOG and AAPL)
+select count(*),sum(l.close),stddev(l.close),sum(r.close),stddev(r.close) from NewStocks l join NewStocks r on  l.datestamp=r.datestamp where l.symbol='GOOG' and r.symbol='AAPL' and l.datestamp>=1290038400 and l.datestamp<=1290211200;
+
+5. To calculate Sum[(S1i-Sym1Mean) * (S2i-Sym2Mean)] where S1 = GOOG and S2 = AAPL
+SELECT sum((l.close1 - Sym1Mean)*(r.close2 - Sym2Mean)) from NewStocks l join NewStocks r on l.datestamp=r.datestamp where l.symbol='GOOG' and r.symbol='AAPL' and l.datestamp>=1290038400 and l.datestamp<=1290211200;
+
+6.To stock info for a date range
+SELECT datestamp, open, high, low, close, volume from NewStocks where symbol='GOOG' and datestamp>=1290038400 and datestamp<=1290211200 order by datestamp";
+
 
 --------------------
 Symbols (mysql):
@@ -37,7 +71,19 @@ SELECT symbol from symbols;
 
 --------------------
 StockDaily(mysql):
-1. To check whether stock exits on a day
+1. To check whether stock exits on a particular day
 select count(*) from StocksDaily where date=1151470800 and symbol='GOOG'
 
---------------------
+2. Get Statistical Data of the close price of stock between a data range:
+select count(close), sum(close), std(close), min(close), max(close)  from StocksDaily where symbol='GOOG' and date>=1290038400 and date<= 1290211200;
+
+
+3. To calculate mean and std of two stocks (e.g. GOOG and AAPL)
+select count(*),sum(l.close),std(l.close),sum(r.close),std(r.close) from NewStocks l join NewStocks r on  l.date=r.datestamp where l.symbol='GOOG' and r.symbol='AAPL' and l.date>=1290038400 and l.date<=1290211200;
+
+4. To calculate Sum[(S1i-Sym1Mean) * (S2i-Sym2Mean)] where S1 = GOOG and S2 = AAPL
+SELECT sum((l.close1 - Sym1Mean)*(r.close2 - Sym2Mean)) from NewStocks l join NewStocks r on l.dates=r.date where l.symbol='GOOG' and r.symbol='AAPL' and l.dates>=1290038400 and l.date<=1290211200;--------------------
+
+5. To stock info for a date range
+SELECT date, open, high, low, close, volume from NewStocks where symbol='GOOG' and date>=1290038400 and date<=1290211200 order by datestamp";
+

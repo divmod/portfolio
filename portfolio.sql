@@ -47,7 +47,7 @@ create table Holdings (
 --create table OurStocksDaily(
 --    symbol char(16) not null,
 --    datestamp number not null,
- --   open real not null,
+--    open real not null,
 --    high real not null,
 --    low real not null,
 --    close real not null,
@@ -74,6 +74,12 @@ create table NewStocks(
     close real not null,
     volume real not null,
     constraint OurStocksDaily_unique UNIQUE (symbol, datestamp)
+);
+
+create table MarketDaily(
+    datestamp number primary key,
+    close real not null,
+    constraint MarketDaily_unique UNIQUE(datestamp, close)
 );
 --
 -- Create the required users
