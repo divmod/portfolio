@@ -21,6 +21,15 @@ UPDATE Holdings set quantity=10, iinvest = 4000.50 where id=2081 and datestamp=1
 
 --------------------
 
+NewStocks:
+1. Add new stock information
+INSERT INTO NewStocks(symbol, datestamp, open, high, low, close,volume) VALUES ('AAPL',1151470800,308.5, 309, 308, 308.9,  2176686);
+
+--------------------
+
+MarketDaily:
+1. Add a row in Market Daily:
+INSERT INTO MarketDaily(datestamp, close) values (1151470800, 308);
 
 ########DQL###########
 
@@ -31,17 +40,28 @@ SELECT pid from Portfolio where username=1038 and name = 'myportfolio';
 2. How much cash is available in a portfolio
 SELECT cashamt from Portfolio where pid='1038';
 
+3. Look up the Portfolio Name given the PID
+SELECT name from Portfolio where pid='2';
+
+4. Get a list of all portfolios for a user
+SELECT name, cashamt, strategy, pid from portfolio where username = 1038;
 
 --------------------
 Holdings:
 1. Get data of an unique holding information
-SELECT quantity, investment from Holdings where id=2081 and datestamp=1151470800 and symbol='GOOG';
+SELECT quantity, iinvest from Holdings where id=2081 and datestamp=1151470800 and symbol='GOOG';
 
 2. Check if a unique holding exists (if does then count will return 1)
 SELECT count(*) from Holdings where id=2081 and datestamp=1151470800 and symbol='GOOG';
 
 3. Get quantity of a stock upto to date. Need this as we could have bought more quantities of stock on different dates. 
 SELECT sum(quantity) from Holdings where datestamp <=1151470800  and symbol='GOOG';
+
+4. Get all of the unique stocks that belong to a Portfolio
+SELECT distinct symbol from Holdings where id='2';
+
+5. Get a list of all stocks in a portfolio
+SELECT datestamp, symbol, iinvest, quantity from holdings where id = 2081;
 
 --------------------
 NewStocks:
@@ -63,6 +83,13 @@ SELECT sum((l.close1 - Sym1Mean)*(r.close2 - Sym2Mean)) from NewStocks l join Ne
 6.To stock info for a date range
 SELECT datestamp, open, high, low, close, volume from NewStocks where symbol='GOOG' and datestamp>=1290038400 and datestamp<=1290211200 order by datestamp";
 
+7. Select the date and the corresponding portfolio value from NewStocks for all of the stocks in the portfolio over the specified date range
+SELECT b.datestamp, (1 * a.close + 1 * b.close) from NewStocks a, NewStocks b where a.symbol = 'AAPL' and b.symbol = 'GOOG' and a.datestamp=b.datestamp and b.datestamp>=1150000000 order by b.datestamp
+
+SELECT c.datestamp, (1 * a.close + 1 * b.close + 1 * c.close) from NewStocks a, NewStocks b, NewStocks c where a.symbol = 'AAPL' and b.symbol = 'GOOG' and c.symbol = 'MSFT' and a.datestamp=b.datestamp and b.datestamp=c.datestamp and c.datestamp>=1150000000 order by c.datestamp
+
+8. Get the closing price for a stock for the lastest date
+SELECT close from NewStocks where symbol = 'GOOG' and datestamp = (select max(datestamp) from NewStocks where symbol = 'GOOG')
 
 --------------------
 Symbols (mysql):
@@ -77,7 +104,6 @@ select count(*) from StocksDaily where date=1151470800 and symbol='GOOG'
 2. Get Statistical Data of the close price of stock between a data range:
 select count(close), sum(close), std(close), min(close), max(close)  from StocksDaily where symbol='GOOG' and date>=1290038400 and date<= 1290211200;
 
-
 3. To calculate mean and std of two stocks (e.g. GOOG and AAPL)
 select count(*),sum(l.close),std(l.close),sum(r.close),std(r.close) from NewStocks l join NewStocks r on  l.date=r.datestamp where l.symbol='GOOG' and r.symbol='AAPL' and l.date>=1290038400 and l.date<=1290211200;
 
@@ -87,3 +113,28 @@ SELECT sum((l.close1 - Sym1Mean)*(r.close2 - Sym2Mean)) from NewStocks l join Ne
 5. To stock info for a date range
 SELECT date, open, high, low, close, volume from NewStocks where symbol='GOOG' and date>=1290038400 and date<=1290211200 order by datestamp";
 
+6. Get count, average of close prices, and standard deviation of close prices for a specific symbol over a date range
+SELECT count(*),avg(close),std(close) from StocksDaily where symbol='GOOG' and date>=1151470800 and date<=1151557200;
+
+7. Select close prices for a specific symbol over a date range, sorting by the date
+SELECT close from StocksDaily where symbol='GOOG' and date>=1151470800 and date<=1151557200 order by date;
+
+8. Select the date and the corresponding portfolio value from StocksDaily for all of the stocks in the portfolio over the specified date range
+SELECT b.date, (1 * a.close + 1 * b.close) from StocksDaily as a, StocksDaily as b where a.symbol = 'AAPL' and b.symbol = 'GOOG' and a.date=b.date and b.date>=1150000000 order by b.date;
+
+SELECT c.date, (1 * a.close + 1 * b.close + 1 * c.close) from StocksDaily as a, StocksDaily as b, StocksDaily as c where a.symbol = 'AAPL' and b.symbol = 'GOOG' and c.symbol = 'MSFT' and a.date=b.date and b.date=c.date and c.date>=1150000000 order by c.date
+
+9. Get the closing price for a stock for the lastest date
+select close from StocksDaily where symbol = 'GOOG' order by date desc limit 1
+
+--------------------
+MarketDaily
+
+1. Return the average close price in the date range
+SELECT avg(close) from MarketDaily where datestamp >= 1151470800and datestamp <= 1151557200;
+
+2.Return the close from in the date range
+SELECT close from MarketDaily where datestamp >= 1151470800and datestamp <= 1151557200;
+
+3. Return variance of the close from in the date range
+SELECT variance(close) from MarketDaily where datestamp >= 1151470800and datestamp <= 1151557200;
